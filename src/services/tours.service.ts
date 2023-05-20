@@ -1,19 +1,18 @@
-import { Observable, map, shareReplay } from "rxjs";
-import { readFile$ } from "../utils/read-file$";
-import { DATA_FOLDER_PATH } from "../utils/constants";
-import { inject, injectable } from "inversify";
-import { Tour } from "../routes/interfaces/tour";
+import { injectable } from "inversify";
+import { Observable, from } from "rxjs";
+import { ITour, Tour } from "../model/tour";
 
 @injectable()
 export class ToursService {
-  constructor(@inject(DATA_FOLDER_PATH) private readonly appRoot: string) { }
+	public getTours$(): Observable<ITour[]> {
+		return from(Tour.find().exec());
+	}
 
-  private readonly tours$ = readFile$(`${this.appRoot}/tours-simple.json`).pipe(
-    map((tours) => JSON.parse(tours)),
-    shareReplay(1),
-  );
+	public getTour$(id: string): Observable<ITour | null> {
+		return from(Tour.findById(id).exec());
+	}
 
-  public getTours$(): Observable<Tour[]> {
-    return this.tours$;
-  }
+	public createTour$(tour: ITour): Observable<ITour> {
+		return from(Tour.create(tour));
+	}
 }

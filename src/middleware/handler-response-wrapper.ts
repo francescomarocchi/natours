@@ -2,7 +2,7 @@ import { createAppResponse } from "../utils/create-app-response";
 import { Handler, NextFunction, Request, Response } from "express";
 
 export function handlerResponseWrapper(): Handler {
-	return (_: Request, response: Response, next: NextFunction) => {
+	return (request: Request, response: Response, next: NextFunction) => {
 		const handlerResponse = response.locals.handlerResponse;
 
 		if (!handlerResponse) {
@@ -11,8 +11,17 @@ export function handlerResponseWrapper(): Handler {
 			response
 				.status(500)
 				.json(createAppResponse(undefined, "error", handlerResponse.message));
-		} else {
-			response.status(200).json(createAppResponse(handlerResponse, "success"));
 		}
+
+		let statusCode = 200;
+		switch (request.method) {
+			case "POST":
+				statusCode = 201;
+				break;
+		}
+
+		response
+			.status(statusCode)
+			.json(createAppResponse(handlerResponse, "success"));
 	};
 }
