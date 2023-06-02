@@ -3,3 +3,4 @@ export const IS_DEVELOPMENT = 'is-development';
 export const CONTROLLER = "controller";
 export const CONTROLLER_METHOD = "controller-method";
 export const CONTROLLER_METHOD_PARAMETER = "controller-method-parameter";
+export const CONNECTION_STRING = 'connection-string';

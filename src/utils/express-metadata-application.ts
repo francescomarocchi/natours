@@ -23,7 +23,7 @@ export class ExpressMetadataApplication {
 	private readonly isDevelopment: boolean =
 		this.container.get<boolean>(IS_DEVELOPMENT);
 
-	private constructor(private readonly container: Container) {}
+	private constructor(private readonly container: Container) { }
 
 	public parseControllers(): ExpressMetadataApplication {
 		// Get controllers from metadata
@@ -101,8 +101,7 @@ export class ExpressMetadataApplication {
 		const port = process.env.PORT || 8080;
 		this.app.listen(port, () => {
 			console.log(
-				`Running in ${
-					this.isDevelopment ? "development" : "production"
+				`Running in ${this.isDevelopment ? "development" : "production"
 				} mode on port ${port} 🤙`,
 			);
 		});
@@ -136,6 +135,9 @@ export class ExpressMetadataApplication {
 						break;
 					case "body":
 						args[parameter.index] = request.body;
+						break;
+					case "query":
+						args[parameter.index] = request.query;
 						break;
 					case "next":
 						args[parameter.index] = next;
