@@ -5,6 +5,8 @@ import { ToursService } from '../../services/tours.service';
 import { controller } from '../../utils/decorators/controller.decorator';
 import { httpMethod } from '../../utils/decorators/http-method.decorator';
 import { params } from '../../utils/decorators/parameters.decorator';
+import { TourRatingAggregate } from '../../model/tour-rating-aggregate';
+import { TourMonthlyPlanAggregate } from '../../model/tour-monthly-plan-aggregate';
 
 @controller('/api/v1/tours')
 export class ToursRouteController {
@@ -22,6 +24,25 @@ export class ToursRouteController {
   @httpMethod('get', '/:id')
   public getTour(@params('params', 'id') id: string): Observable<ITour | null> {
     return this.toursService.getTour$(id);
+  }
+
+  @httpMethod('get', '/top-5-cheap')
+  public getTopCheapestFive(): Observable<ITour[]> {
+    return this.toursService.getTours$({
+      sort: '-price -ratingsAverage',
+      page: '1',
+      limit: '5',
+    } as unknown as ITour);
+  }
+
+  @httpMethod('get', '/tour-stats')
+  public getTourStats(): Observable<TourRatingAggregate[]> {
+    return this.toursService.getTourStatistics$();
+  }
+
+  @httpMethod('get', '/monthly-plan/:year')
+  public getMonthlyPlan(@params('params', 'year') year: string): Observable<TourMonthlyPlanAggregate[]> {
+    return this.toursService.getMonthlyPlan$(+year);
   }
 
   @httpMethod('post', '/')
