@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from 'express';
 import { controller } from '../../utils/decorators/controller.decorator';
 import { httpMethod } from '../../utils/decorators/http-method.decorator';
 import { params } from '../../utils/decorators/parameters.decorator';
+import { IUser, User } from '../../model/user';
+import { Observable, from, map } from 'rxjs';
 
 const users = [
   { id: 1, name: 'beavis' },
@@ -9,10 +11,10 @@ const users = [
 ];
 
 @controller('/api/v1/users')
-export class UsersRouteHandler {
+export class UsersController {
   @httpMethod('get', '/')
-  private getUsers(request: Request, response: Response, next: NextFunction): unknown {
-    return undefined; 
+  private getUsers(): Observable<unknown> {
+    return from(User.find());
   }
 
   @httpMethod('post', '/')
@@ -21,8 +23,8 @@ export class UsersRouteHandler {
   }
 
   @httpMethod('get', '/:id')
-  public getUser(@params('params','id') id: string): unknown {
-    return users.find(u => u.id === Number(id));
+  public getUser(@params('params', 'id') id: string): unknown {
+    return users.find((u) => u.id === Number(id));
   }
 
   @httpMethod('patch', '/:id')

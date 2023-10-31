@@ -1,17 +1,22 @@
 import { inject } from 'inversify';
 import { Observable, tap } from 'rxjs';
 import { ITour } from '../../model/tour';
+import { TourMonthlyPlanAggregate } from '../../model/tour-monthly-plan-aggregate';
+import { TourRatingAggregate } from '../../model/tour-rating-aggregate';
 import { ToursService } from '../../services/tours.service';
+import { authorize } from '../../utils/decorators/authorize.decorator';
 import { controller } from '../../utils/decorators/controller.decorator';
 import { httpMethod } from '../../utils/decorators/http-method.decorator';
 import { params } from '../../utils/decorators/parameters.decorator';
-import { TourRatingAggregate } from '../../model/tour-rating-aggregate';
-import { TourMonthlyPlanAggregate } from '../../model/tour-monthly-plan-aggregate';
 
 @controller('/api/v1/tours')
-export class ToursRouteController {
-  constructor(@inject(ToursService) private readonly toursService: ToursService) {}
+export class ToursController {
+  constructor(
+    @inject(ToursService) private readonly toursService: ToursService
+  ) {
+  }
 
+  @authorize()
   @httpMethod('get', '/')
   public getTours(@params('query') query: ITour): Observable<ITour[]> {
     return this.toursService.getTours$(query).pipe(
@@ -21,6 +26,7 @@ export class ToursRouteController {
     );
   }
 
+  @authorize()
   @httpMethod('get', '/:id')
   public getTour(@params('params', 'id') id: string): Observable<ITour | null> {
     return this.toursService.getTour$(id);
@@ -31,7 +37,7 @@ export class ToursRouteController {
     return this.toursService.getTours$({
       sort: '-price -ratingsAverage',
       page: '1',
-      limit: '5',
+      limit: '5'
     } as unknown as ITour);
   }
 
@@ -41,7 +47,9 @@ export class ToursRouteController {
   }
 
   @httpMethod('get', '/monthly-plan/:year')
-  public getMonthlyPlan(@params('params', 'year') year: string): Observable<TourMonthlyPlanAggregate[]> {
+  public getMonthlyPlan(
+    @params('params', 'year') year: string
+  ): Observable<TourMonthlyPlanAggregate[]> {
     return this.toursService.getMonthlyPlan$(+year);
   }
 
@@ -59,7 +67,9 @@ export class ToursRouteController {
   }
 
   @httpMethod('delete', '/:id')
-  public deleteTour(@params('params', 'id') id: string): Observable<ITour | null> {
+  public deleteTour(
+    @params('params', 'id') id: string
+  ): Observable<ITour | null> {
     return this.toursService.deleteTour$(id);
   }
 }

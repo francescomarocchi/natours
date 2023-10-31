@@ -1,6 +1,6 @@
 # Route Handler
 
-#req# What is a handler?
+## What is a handler?
 
 A handler is a class used to handler an express route.
 
@@ -17,7 +17,7 @@ export class SampleRouteHandler {
   @httpMethod('get', '/')
   private getUsers(): user[] | undefined {
     if (someCondition) {
-      throw new Error('x'); // 500 INTERNAL SERVER ERROR (x)
+      throw new AppError('x'); // 500 INTERNAL SERVER ERROR (x)
     } else if (otherCondition) {
       return undefined; // 404 NOT FOUND 
     }
@@ -63,7 +63,8 @@ export class SampleRouteHandler {
   @httpMethod('get', '/')
   private getUsers(
     @params('param', 'id') id: string,
-    @params('next') next: NextFunction
+    @params('next') next: NextFunction,
+    @params('response') response: Response
   ): void {
     const someJson = getSomethingById(id);
     if (someJson !== undefined) {
@@ -95,7 +96,7 @@ export class SampleRouteHandler {
       return of(undefined); // 404 NOT FOUND
     } else if (bored) {
       // 500 INTERNAL SERVER ERROR ('x')
-      return defer(() => throw new Error('x'));
+      return defer(() => throw new AppError('x'));
     }
     return of(1);
   }

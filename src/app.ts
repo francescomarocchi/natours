@@ -9,8 +9,9 @@ import { CONNECTION_STRING } from './utils/constants';
 import { ExpressMetadataApplication } from './utils/express-metadata-application';
 
 // TODO: make this become a module!
-import './routes/controllers/tours-route-controller';
+import './routes/controllers/tours-controller';
 import './routes/controllers/users-controller';
+import './routes/controllers/auth-controller';
 
 ExpressMetadataApplication.create(container)
   .addDevMiddleware(morgan('dev'))

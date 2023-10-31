@@ -8,13 +8,18 @@ export function handlerResponseWrapper(): Handler {
     if (!handlerResponse || (Array.isArray(handlerResponse) && handlerResponse.length === 0)) {
       next();
     } else if (handlerResponse instanceof Error) {
-      response.status(500).json(createAppResponse(undefined, 'error', handlerResponse.message));
+      throw handlerResponse;
     } else {
       let statusCode = 200;
       switch (request.method) {
         case 'POST':
           statusCode = 201;
           break;
+      }
+
+      // TODO: this sucks, find a better way
+      if (response.locals.statusCode) {
+        statusCode = response.locals.statusCode;
       }
 
       response.status(statusCode).json(createAppResponse(handlerResponse, 'success'));

@@ -4,6 +4,7 @@ import { Container } from 'inversify';
 import 'reflect-metadata'; // Used by inversify, MANDATORY
 import { ToursService } from './services/tours.service';
 import { CONNECTION_STRING, DATA_FOLDER_PATH, IS_DEVELOPMENT } from './utils/constants';
+import { UserService } from './services/users.service';
 
 // path is intended as NODE path (where node is launched)
 dotenv.config({ path: 'config.env' });
@@ -15,5 +16,6 @@ container.bind<string>(CONNECTION_STRING).toConstantValue(process.env.DATABASE_C
 container.bind<boolean>(IS_DEVELOPMENT).toConstantValue(process.env.ENVIRONMENT === 'development');
 container.bind<Express>('app').toFactory(() => express());
 container.bind<ToursService>(ToursService).to(ToursService);
+container.bind<UserService>(UserService).to(UserService);
 
 export default container;

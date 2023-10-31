@@ -1,8 +1,8 @@
 import { CONTROLLER_METHOD } from '../constants';
+import { MethodMetadata } from '../interfaces/method-metadata';
 
 import { Constructable } from '../types/constructable';
 import { HTTP_VERBS } from '../types/http-verbs';
-import { MethodMetadata } from '../interfaces/method-metadata';
 
 export const httpMethod = (method: HTTP_VERBS, path: string) => {
   return (target: Constructable, key: string): void => {
