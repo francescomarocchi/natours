@@ -4,7 +4,7 @@ import { inject } from 'inversify';
 import jwt from 'jsonwebtoken';
 import { Observable, combineLatest, from, map, of, switchMap } from 'rxjs';
 import { AppError } from '../../model/error';
-import { IUser, User } from '../../model/user';
+import { IUser, User, UserRoles } from '../../model/user';
 import { UserService } from '../../services/users.service';
 import { controller } from '../../utils/decorators/controller.decorator';
 import { httpMethod } from '../../utils/decorators/http-method.decorator';
@@ -19,7 +19,7 @@ export class AuthController {
 	public signup(@params('body') user: IUser): Observable<IUser> {
 		return this.userService.createUser$(user).pipe(
 			map((newUser: Document<unknown, {}, IUser>) => {
-				const token = this.createToken(newUser.id);
+				const token = this.createToken(newUser.id, newUser.get('role'));
 				return { ...newUser.get('_doc'), token };
 			})
 		);
@@ -44,14 +44,16 @@ export class AuthController {
 				if (!user?.password) {
 					return of([undefined, false]);
 				}
-				return combineLatest([of(user.id), from(bcrypt.compare(password, user?.password))]);
+				return combineLatest([of(user.id), of(user.get('role')), from(bcrypt.compare(password, user?.password))]);
 			}),
-			map(([id, logged]) => (logged ? this.createToken(id) : new AppError('Incorrect email or password', 401)))
+			map(([id, role, logged]) =>
+				logged ? this.createToken(id, role) : new AppError('Incorrect email or password', 401)
+			)
 		);
 	}
 
-	private createToken(id: string): string {
-		return jwt.sign({ id }, process.env.JWT_SECRET as jwt.Secret, {
+	private createToken(id: string, role: UserRoles): string {
+		return jwt.sign({ id, role }, process.env.JWT_SECRET as jwt.Secret, {
 			expiresIn: process.env.JWT_EXPIRES_IN,
 		});
 	}

@@ -1,25 +1,30 @@
+import { UserRoles } from '../../model/user';
 import { CONTROLLER_METHOD_ACCESSOR } from '../constants';
+import { AuthorizeMetadata } from '../interfaces/authorize-metadata';
 import { Constructable } from '../types/constructable';
 
-export const authorize = () => {
+export const authorize = (roles?: UserRoles[]) => {
   return (target: Constructable, key: string): void => {
-    let metadataList: string[] = [];
+    let metadataList: AuthorizeMetadata[] = [];
     if (!Reflect.hasOwnMetadata(CONTROLLER_METHOD_ACCESSOR, target.constructor)) {
       Reflect.defineMetadata(CONTROLLER_METHOD_ACCESSOR, metadataList, target.constructor);
     } else {
       metadataList = Reflect.getOwnMetadata(CONTROLLER_METHOD_ACCESSOR, target.constructor);
     }
 
-    metadataList.push(key);
+    metadataList.push({ key, roles });
   };
 };
 
-export const getMethodsAccessor = (ctor: NewableFunction): string[] => {
+export const getMethodsAccessor = (ctor: NewableFunction): AuthorizeMetadata[] => {
   // Constructor metadata
-  const methodMetadata: string[] = (Reflect.getOwnMetadata(CONTROLLER_METHOD_ACCESSOR, ctor) as string[]) ?? [];
+  const methodMetadata: AuthorizeMetadata[] =
+    (Reflect.getOwnMetadata(CONTROLLER_METHOD_ACCESSOR, ctor) as AuthorizeMetadata[]) ?? [];
   // Prototype metadata
-  const genericMetadata: string[] =
-    (Reflect.getMetadata(CONTROLLER_METHOD_ACCESSOR, Reflect.getPrototypeOf(ctor) as NewableFunction) as string[]) ??
-    [];
+  const genericMetadata: AuthorizeMetadata[] =
+    (Reflect.getMetadata(
+      CONTROLLER_METHOD_ACCESSOR,
+      Reflect.getPrototypeOf(ctor) as NewableFunction
+    ) as AuthorizeMetadata[]) ?? [];
   return [...methodMetadata, ...genericMetadata];
 };

@@ -2,9 +2,17 @@ import bcrypt from 'bcryptjs';
 import mongoose, { Schema } from 'mongoose';
 import validator from 'validator';
 
+export enum UserRoles {
+  User = 'user',
+  Guide = 'guide',
+  LeadGuide = 'lead-guide',
+  Admin = 'admin',
+}
+
 export interface IUser {
   name: string;
   email: string;
+  role: UserRoles;
   photo: string;
   password: string;
   passwordConfirm: string | undefined;
@@ -14,21 +22,26 @@ export interface IUser {
 const userSchema = new Schema<IUser>({
   name: {
     type: String,
-    required: [true, 'Please tell us your name']
+    required: [true, 'Please tell us your name'],
   },
   email: {
     type: String,
     required: [true, 'Please provide your email'],
     unique: true,
     lowercase: true,
-    validate: [validator.isEmail, 'Please provide a valid email address']
+    validate: [validator.isEmail, 'Please provide a valid email address'],
+  },
+  role: {
+    type: String,
+    enum: [UserRoles.Admin, UserRoles.Guide, UserRoles.LeadGuide, UserRoles.User],
+    default: UserRoles.User,
   },
   photo: String,
   password: {
     type: String,
     required: [true, 'Please provide a password'],
     minlength: 8,
-    select: false
+    select: false,
   },
   passwordConfirm: {
     type: String,
@@ -38,10 +51,10 @@ const userSchema = new Schema<IUser>({
       validator: function(this: IUser, element: string): boolean {
         return element === this.password;
       },
-      message: 'Passwords are not matching'
-    }
+      message: 'Passwords are not matching',
+    },
   },
-  passwordChangedAt: Date
+  passwordChangedAt: Date,
 });
 
 userSchema.pre('save', async function(next) {
@@ -56,7 +69,6 @@ userSchema.pre('save', async function(next) {
 
 userSchema.methods.changedPasswordAfter = function(jwtTimestamp: Date) {
   if (this.passwordChangedAt) {
-
   }
 };
 

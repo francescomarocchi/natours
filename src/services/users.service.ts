@@ -10,6 +10,7 @@ export class UserService {
 			User.create({
 				name: user.name,
 				email: user.email,
+				role: user.role,
 				password: user.password,
 				passwordConfirm: user.passwordConfirm,
 			}),
