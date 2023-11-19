@@ -3,6 +3,7 @@ import { Observable, tap } from 'rxjs';
 import { ITour } from '../../model/tour';
 import { TourMonthlyPlanAggregate } from '../../model/tour-monthly-plan-aggregate';
 import { TourRatingAggregate } from '../../model/tour-rating-aggregate';
+import { UserRoles } from '../../model/user';
 import { ToursService } from '../../services/tours.service';
 import { authorize } from '../../utils/decorators/authorize.decorator';
 import { controller } from '../../utils/decorators/controller.decorator';
@@ -11,12 +12,9 @@ import { params } from '../../utils/decorators/parameters.decorator';
 
 @controller('/api/v1/tours')
 export class ToursController {
-  constructor(
-    @inject(ToursService) private readonly toursService: ToursService
-  ) {
+  constructor(@inject(ToursService) private readonly toursService: ToursService) {
   }
 
-  @authorize()
   @httpMethod('get', '/')
   public getTours(@params('query') query: ITour): Observable<ITour[]> {
     return this.toursService.getTours$(query).pipe(
@@ -26,7 +24,6 @@ export class ToursController {
     );
   }
 
-  @authorize()
   @httpMethod('get', '/:id')
   public getTour(@params('params', 'id') id: string): Observable<ITour | null> {
     return this.toursService.getTour$(id);
@@ -47,29 +44,25 @@ export class ToursController {
   }
 
   @httpMethod('get', '/monthly-plan/:year')
-  public getMonthlyPlan(
-    @params('params', 'year') year: string
-  ): Observable<TourMonthlyPlanAggregate[]> {
+  public getMonthlyPlan(@params('params', 'year') year: string): Observable<TourMonthlyPlanAggregate[]> {
     return this.toursService.getMonthlyPlan$(+year);
   }
 
+  @authorize([UserRoles.Admin, UserRoles.LeadGuide])
   @httpMethod('post', '/')
   public createTour(@params('body') tour: ITour): Observable<ITour> {
     return this.toursService.createTour$(tour);
   }
 
+  @authorize([UserRoles.Admin, UserRoles.LeadGuide])
   @httpMethod('patch', '/:id')
-  public updateTour(
-    @params('body') tour: ITour,
-    @params('params', 'id') id: string
-  ): Observable<ITour | null> {
+  public updateTour(@params('body') tour: ITour, @params('params', 'id') id: string): Observable<ITour | null> {
     return this.toursService.updateTour$(id, tour);
   }
 
+  @authorize([UserRoles.Admin, UserRoles.LeadGuide])
   @httpMethod('delete', '/:id')
-  public deleteTour(
-    @params('params', 'id') id: string
-  ): Observable<ITour | null> {
+  public deleteTour(@params('params', 'id') id: string): Observable<ITour | null> {
     return this.toursService.deleteTour$(id);
   }
 }

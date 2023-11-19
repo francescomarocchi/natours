@@ -39,7 +39,7 @@ export class ToursService {
         {
           $sort: { avgPrice: 1 },
         },
-      ]).exec()
+      ]).exec(),
     );
   }
 
@@ -74,9 +74,9 @@ export class ToursService {
           $sort: { numTourStarts: -1 },
         },
         {
-          $limit: 12
-        }
-      ]).exec()
+          $limit: 12,
+        },
+      ]).exec(),
     );
   }
 
@@ -85,7 +85,9 @@ export class ToursService {
   }
 
   public updateTour$(id: string, tour: ITour): Observable<ITour | null> {
-    return from(Tour.findByIdAndUpdate(id, tour, { new: true, runValidators: true }));
+    return from(
+      Tour.findByIdAndUpdate(id, tour, { new: true, runValidators: true }),
+    );
   }
 
   public deleteTour$(id: string): Observable<ITour | null> {

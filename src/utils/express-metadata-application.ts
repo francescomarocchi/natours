@@ -1,4 +1,10 @@
-import express, { Express, Handler, NextFunction, Request, Response } from 'express';
+import express, {
+  Express,
+  Handler,
+  NextFunction,
+  Request,
+  Response,
+} from 'express';
 import { Container } from 'inversify';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { isObservable, take } from 'rxjs';
@@ -6,7 +12,10 @@ import { AppError } from '../model/error';
 import { UserRoles } from '../model/user';
 import { CONTROLLER, IS_DEVELOPMENT } from './constants';
 import { getMethodsAccessor } from './decorators/authorize.decorator';
-import { getControllerMetadata, getControllers } from './decorators/controller.decorator';
+import {
+  getControllerMetadata,
+  getControllers,
+} from './decorators/controller.decorator';
 import { getMethodsMetadata } from './decorators/http-method.decorator';
 import { getParametersMetadata } from './decorators/parameters.decorator';
 import { AuthorizeMetadata } from './interfaces/authorize-metadata';
@@ -16,7 +25,10 @@ import { NewableFunctionWithProperties } from './types/newable-function-with-pro
 
 export class ExpressMetadataApplication {
   private readonly app: Express = this.container.get<Express>('app');
-  private readonly isDevelopment: boolean = this.container.get<boolean>(IS_DEVELOPMENT);
+  private readonly isDevelopment: boolean =
+    this.container.get<boolean>(IS_DEVELOPMENT);
+
+  // We can get instance of user service here to be used for checks in TODOS in this file
 
   private constructor(private readonly container: Container) { }
 
@@ -25,53 +37,73 @@ export class ExpressMetadataApplication {
     const controllers: NewableFunction[] = getControllers();
     // ...and bind them in container
     controllers.forEach((controller) => {
-      this.container.bind(CONTROLLER).to(controller as new (...args: never[]) => unknown);
+      this.container
+        .bind(CONTROLLER)
+        .to(controller as new (...args: never[]) => unknown);
     });
 
     // The way to get controller instances is through container
     const controllersFromContainer: NewableFunctionWithProperties[] =
       this.container.getAll<NewableFunctionWithProperties>(CONTROLLER);
 
-    controllersFromContainer.forEach((controller: NewableFunctionWithProperties) => {
-      // Get controller metadata
-      const controllerMetadata: ControllerMetadata = getControllerMetadata(controller.constructor);
+    controllersFromContainer.forEach(
+      (controller: NewableFunctionWithProperties) => {
+        // Get controller metadata
+        const controllerMetadata: ControllerMetadata = getControllerMetadata(
+          controller.constructor,
+        );
 
-      // Get methods metadata
-      const methodsMetadata = getMethodsMetadata(controller.constructor);
+        // Get methods metadata
+        const methodsMetadata = getMethodsMetadata(controller.constructor);
 
-      // Get methods accessor (authorize)
-      const methodsAccessor: AuthorizeMetadata[] = getMethodsAccessor(controller.constructor);
+        // Get methods authorization metadata
+        const methodsAccessor: AuthorizeMetadata[] = getMethodsAccessor(
+          controller.constructor,
+        );
 
-      // Get parameters metadata
-      const parametersMetadata = getParametersMetadata(controller.constructor);
+        // Get parameters metadata
+        const parametersMetadata = getParametersMetadata(
+          controller.constructor,
+        );
 
-      const router = express.Router();
+        const router = express.Router();
 
-      methodsMetadata?.forEach((methodMetadata) => {
-        const method = controller[methodMetadata.key] as () => unknown;
-        if (!method) {
-          throw new Error('no handler found!');
-        }
+        methodsMetadata?.forEach((methodMetadata) => {
+          const method = controller[methodMetadata.key] as () => unknown;
+          if (!method) {
+            throw new Error('no handler found!');
+          }
 
-        const parameters = parametersMetadata[methodMetadata.key];
-        const routeHandler = ExpressMetadataApplication.createRouteHandler(method.bind(controller), parameters);
+          const parameters = parametersMetadata[methodMetadata.key];
+          const routeHandler = ExpressMetadataApplication.createRouteHandler(
+            method.bind(controller),
+            parameters,
+          );
 
-        /*
-         * Just if route has been marked as protected we add an extra handler
-         * to check if the user has every needed permission granted
-         */
+          /*
+           * Just if route has been marked as protected we add an extra handler
+           * to check if the user has every needed permission granted
+           */
 
-        const accessor = methodsAccessor.find((accessor) => accessor.key === methodMetadata.key);
-        if (accessor) {
-          const authorizeHandler = ExpressMetadataApplication.createAuthorizeHandler(accessor.roles);
-          router.route(methodMetadata.path)[methodMetadata.method](authorizeHandler);
-        }
+          const accessor = methodsAccessor.find(
+            (accessor) => accessor.key === methodMetadata.key,
+          );
+          if (accessor) {
+            const authorizeHandler =
+              ExpressMetadataApplication.createAuthorizeHandler(accessor.roles);
+            router
+              .route(methodMetadata.path)
+            [methodMetadata.method](authorizeHandler);
+          }
 
-        router.route(methodMetadata.path)[methodMetadata.method](routeHandler);
-      });
+          router
+            .route(methodMetadata.path)
+          [methodMetadata.method](routeHandler);
+        });
 
-      this.app.use(controllerMetadata.path, router);
-    });
+        this.app.use(controllerMetadata.path, router);
+      },
+    );
     return this;
   }
 
@@ -94,7 +126,10 @@ export class ExpressMetadataApplication {
   public startListening(): void {
     const port = process.env.PORT || 8080;
     const server = this.app.listen(port, () => {
-      console.log(`Running in ${this.isDevelopment ? 'development' : 'production'} mode on port ${port} 🤙`);
+      console.log(
+        `Running in ${this.isDevelopment ? 'development' : 'production'
+        } mode on port ${port} 🤙`,
+      );
     });
 
     const universalHandler = (error: Error) => {
@@ -115,7 +150,7 @@ export class ExpressMetadataApplication {
 
   private static createRouteHandler(
     method: (...args: unknown[]) => unknown,
-    parametersMetadata: ParameterMetadata[]
+    parametersMetadata: ParameterMetadata[],
   ): Handler {
     return (request: Request, response: Response, next: NextFunction) => {
       const args: unknown[] = [request, response, next];
@@ -129,7 +164,9 @@ export class ExpressMetadataApplication {
             break;
           case 'params':
             if (!parameter.parameterName) {
-              throw new Error(`provide parameter name for parameter at index ${parameter.index}`);
+              throw new Error(
+                `provide parameter name for parameter at index ${parameter.index}`,
+              );
             }
             args[parameter.index] = request.params[parameter.parameterName];
             break;
@@ -179,16 +216,25 @@ export class ExpressMetadataApplication {
       const decodedToken = jwt.decode(token) as JwtPayload;
       const role = decodedToken.role;
       if (roles && !roles.includes(role)) {
-        return next(new AppError(`${role} role cannot access this content. Required: ${roles.join(', ')}`, 403));
+        return next(
+          new AppError(
+            `${role} role cannot access this content. Required: ${roles.join(
+              ', ',
+            )}`,
+            403,
+          ),
+        );
       }
 
       // 2. Verify token
       try {
-        jwt.verify(token, process.env.JWT_SECRET!);
+        jwt.verify(token, process.env.JWT_SECRET ?? '');
       } catch (error) {
         const errorName = (error as Error).name;
         if (errorName === 'JsonWebTokenError') {
-          return next(new AppError('Invalid signature. Please login again', 401));
+          return next(
+            new AppError('Invalid signature. Please login again', 401),
+          );
         } else if (errorName === 'TokenExpiredError') {
           return next(new AppError('Token expired, please login again', 401));
         }
