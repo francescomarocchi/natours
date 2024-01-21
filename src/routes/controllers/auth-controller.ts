@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { inject } from 'inversify';
 import { Observable, of } from 'rxjs';
 import { AppError } from '../../model/error';
@@ -7,11 +7,12 @@ import { UserService } from '../../services/users.service';
 import { controller } from '../../utils/decorators/controller.decorator';
 import { httpMethod } from '../../utils/decorators/http-method.decorator';
 import { params } from '../../utils/decorators/parameters.decorator';
+import { authorize } from '../../utils/decorators/authorize.decorator';
+import { ExtendedRequest } from '../../model/request';
 
 @controller('/')
 export class AuthController {
-  constructor(@inject(UserService) private readonly userService: UserService) {
-  }
+  constructor(@inject(UserService) private readonly userService: UserService) { }
 
   @httpMethod('post', '/signup')
   public signup(@params('body') user: IUser): Observable<IUser> {
@@ -21,11 +22,14 @@ export class AuthController {
   @httpMethod('post', '/login')
   public login(
     @params('body') credentials: { email: string; password: string },
-    @params('response') response: Response
+    @params('response') response: Response,
   ): Observable<string | AppError> {
     const { email, password } = credentials;
     if (!email || !password) {
-      throw new AppError('Please provide correct email address and password', 400);
+      throw new AppError(
+        'Please provide correct email address and password',
+        400,
+      );
     }
 
     // TODO: this crap should be refactored (statusCode set in @httpMethod?)
@@ -34,7 +38,9 @@ export class AuthController {
   }
 
   @httpMethod('post', '/forgot-password')
-  public forgotPassword(@params('body') email: { email: string }): Observable<AppError | string> {
+  public forgotPassword(
+    @params('body') email: { email: string },
+  ): Observable<AppError | string> {
     if (!email?.email) {
       return of(new AppError('Please provide a valid email address', 400));
     }
@@ -44,8 +50,31 @@ export class AuthController {
   @httpMethod('patch', '/reset-password/:token')
   public resetPassword(
     @params('params', 'token') resetToken: string,
-    @params('body') data: { password: string; passwordConfirm: string }
+    @params('body') data: { password: string; passwordConfirm: string },
   ): Observable<string | AppError> {
-    return this.userService.resetPassword$(resetToken, data.password, data.passwordConfirm);
+    return this.userService.resetPassword$(
+      resetToken,
+      data.password,
+      data.passwordConfirm,
+    );
+  }
+
+  @authorize()
+  @httpMethod('patch', '/change-password')
+  public changePassword(
+    @params('request') request: ExtendedRequest,
+    @params('body')
+    data: {
+      currentPassword: string;
+      password: string;
+      passwordConfirm: string;
+    },
+  ): Observable<string | AppError> {
+    return this.userService.changePassword$(
+      request.locals.id,
+      data.currentPassword,
+      data.password,
+      data.passwordConfirm,
+    );
   }
 }

@@ -22,6 +22,7 @@ import { AuthorizeMetadata } from './interfaces/authorize-metadata';
 import { ControllerMetadata } from './interfaces/controller-metadata';
 import { ParameterMetadata } from './interfaces/parameter-metadata';
 import { NewableFunctionWithProperties } from './types/newable-function-with-properties';
+import { ExtendedRequest } from '../model/request';
 
 export class ExpressMetadataApplication {
   private readonly app: Express = this.container.get<Express>('app');
@@ -215,7 +216,7 @@ export class ExpressMetadataApplication {
 
       const decodedToken = jwt.decode(token) as JwtPayload;
       const role = decodedToken.role;
-      if (roles && !roles.includes(role)) {
+      if (roles && roles.length > 0 && !roles.includes(role)) {
         return next(
           new AppError(
             `${role} role cannot access this content. Required: ${roles.join(
@@ -239,6 +240,12 @@ export class ExpressMetadataApplication {
           return next(new AppError('Token expired, please login again', 401));
         }
       }
+
+      // Since we're here we can export user data to request for future usage
+      (request as ExtendedRequest).locals = {
+        id: decodedToken['id'],
+        role: role,
+      };
 
       // 3. Is user still existing?
       // TODO: NOT IMPLEMENTED, SELECT USER AND CHECK IF EXISTING PICKING UP ID FROM TOKEN

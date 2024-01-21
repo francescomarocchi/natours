@@ -106,6 +106,37 @@ export class UserService {
     );
   }
 
+  public changePassword$(
+    userId: string,
+    currentPassword: string,
+    password: string,
+    passwordConfirm: string,
+  ): Observable<string | AppError> {
+    return from(User.findById(userId).select('+password')).pipe(
+      switchMap((user) => {
+        return combineLatest([
+          of(user),
+          user ? bcrypt.compare(currentPassword, user.password) : of(false),
+        ]);
+      }),
+      switchMap(([user, isPasswordMatching]) => {
+        if (!user || !isPasswordMatching) {
+          return of(
+            new AppError('User id is not found or password not matching', 401),
+          );
+        }
+
+        user.password = password;
+        user.passwordConfirm = passwordConfirm;
+
+        return user.save();
+      }),
+      map((user) =>
+        user instanceof AppError ? user : this.createToken(user.id, user.role),
+      ),
+    );
+  }
+
   private createToken(id: string, role: UserRoles): string {
     return jwt.sign({ id, role }, process.env.JWT_SECRET as jwt.Secret, {
       expiresIn: process.env.JWT_EXPIRES_IN,
