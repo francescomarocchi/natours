@@ -7,10 +7,12 @@ import { Observable, combineLatest, from, map, of, switchMap } from 'rxjs';
 import { AppError } from '../model/error';
 import { IUser, User, UserRoles } from '../model/user';
 import { sendForgotPasswordEmail } from '../utils/operators/send-forgot-password-email';
+import { EMPTY } from '../utils/types/empty';
+import { ForCookie } from '../utils/types/for-cookie';
 
 @injectable()
 export class UserService {
-  public createUserAndToken$(user: IUser): Observable<IUser> {
+  public createUserAndToken$(user: IUser): Observable<ForCookie<IUser>> {
     return from(
       User.create({
         name: user.name,
@@ -22,7 +24,12 @@ export class UserService {
     ).pipe(
       map((newUser: Document<unknown, {}, IUser>) => {
         const token = this.createToken(newUser.id, newUser.get('role'));
-        return { ...newUser.get('_doc'), token };
+        // Serializing and parsing newUser to have it on output.
+        // newUser.get('doc') doesn't work as expected :(
+        const serializedNewUser = JSON.stringify(newUser);
+        const deserializedNewUser = JSON.parse(serializedNewUser);
+        deserializedNewUser.password = undefined;
+        return new ForCookie({ ...deserializedNewUser, token }, token);
       }),
     );
   }
@@ -31,7 +38,14 @@ export class UserService {
     return from(User.findOne<IUser>({ email }));
   }
 
-  public login$(email: string, password: string) {
+  public getUsers$(): Observable<IUser | IUser[]> {
+    return from(User.find<IUser>());
+  }
+
+  public login$(
+    email: string,
+    password: string,
+  ): Observable<AppError | ForCookie<string>> {
     return from(User.findOne({ email }).select('+password')).pipe(
       switchMap((user) => {
         if (!user?.password) {
@@ -43,11 +57,33 @@ export class UserService {
           from(bcrypt.compare(password, user?.password)),
         ]);
       }),
-      map(([id, role, logged]) =>
-        logged
-          ? this.createToken(id, role)
-          : new AppError('Incorrect email or password', 401),
+      map(([id, role, logged]) => {
+        if (!logged) {
+          return new AppError('Incorrect email or password', 401);
+        }
+        const token = this.createToken(id, role);
+        return new ForCookie(token, token);
+      }),
+    );
+  }
+
+  public updateAuthenticatedUser$(
+    userId: string,
+    name: string,
+    email: string,
+  ): Observable<AppError | IUser> {
+    return from(
+      User.findByIdAndUpdate<IUser>(
+        userId,
+        { name, email },
+        { new: true, runValidators: true },
       ),
+    ).pipe(map((user) => (user ? user : new AppError('User not found', 400))));
+  }
+
+  public deleteUser$(userId: string): Observable<AppError | EMPTY> {
+    return from(User.findByIdAndUpdate<IUser>(userId, { active: false })).pipe(
+      map((user) => (user ? 'empty' : new AppError('User not found'))),
     );
   }
 
@@ -55,7 +91,7 @@ export class UserService {
     return this.getUser$(email).pipe(
       switchMap((user) => {
         if (!user) {
-          return of(new AppError('User not found'));
+          return of(new AppError('User not found', 400));
         }
 
         const resetToken = user.createPasswordResetToken();
@@ -76,7 +112,7 @@ export class UserService {
     resetToken: string,
     password: string,
     passwordConfirm: string,
-  ): Observable<string | AppError> {
+  ): Observable<ForCookie<string> | AppError> {
     const hashedToken = crypto
       .createHash('sha256')
       .update(resetToken)
@@ -100,9 +136,13 @@ export class UserService {
 
         return user.save();
       }),
-      map((user) =>
-        user instanceof AppError ? user : this.createToken(user.id, user.role),
-      ),
+      map((user) => {
+        if (user instanceof AppError) {
+          return user;
+        }
+        const token = this.createToken(user.id, user.role);
+        return new ForCookie(token, token);
+      }),
     );
   }
 
@@ -111,7 +151,7 @@ export class UserService {
     currentPassword: string,
     password: string,
     passwordConfirm: string,
-  ): Observable<string | AppError> {
+  ): Observable<ForCookie<string> | AppError> {
     return from(User.findById(userId).select('+password')).pipe(
       switchMap((user) => {
         return combineLatest([
@@ -131,9 +171,13 @@ export class UserService {
 
         return user.save();
       }),
-      map((user) =>
-        user instanceof AppError ? user : this.createToken(user.id, user.role),
-      ),
+      map((user) => {
+        if (user instanceof AppError) {
+          return user;
+        }
+        const token = this.createToken(user.id, user.role);
+        return new ForCookie(token, token);
+      }),
     );
   }
 

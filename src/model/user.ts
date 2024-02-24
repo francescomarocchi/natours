@@ -20,6 +20,7 @@ export interface IUser {
   passwordChangedAt?: number;
   passwordResetToken?: string;
   passwordResetExpireDate?: Date;
+  active: boolean;
 
   changedPasswordAfter(jwtTimestamp: Date): void;
 
@@ -29,14 +30,14 @@ export interface IUser {
 const userSchema = new Schema<IUser>({
   name: {
     type: String,
-    required: [true, 'Please tell us your name']
+    required: [true, 'Please tell us your name'],
   },
   email: {
     type: String,
     required: [true, 'Please provide your email'],
     unique: true,
     lowercase: true,
-    validate: [validator.isEmail, 'Please provide a valid email address']
+    validate: [validator.isEmail, 'Please provide a valid email address'],
   },
   role: {
     type: String,
@@ -44,16 +45,16 @@ const userSchema = new Schema<IUser>({
       UserRoles.Admin,
       UserRoles.Guide,
       UserRoles.LeadGuide,
-      UserRoles.User
+      UserRoles.User,
     ],
-    default: UserRoles.User
+    default: UserRoles.User,
   },
   photo: String,
   password: {
     type: String,
     required: [true, 'Please provide a password'],
     minlength: 8,
-    select: false
+    select: false,
   },
   passwordConfirm: {
     type: String,
@@ -63,12 +64,23 @@ const userSchema = new Schema<IUser>({
       validator: function(this: IUser, element: string): boolean {
         return element === this.password;
       },
-      message: 'Passwords are not matching'
-    }
+      message: 'Passwords are not matching',
+    },
   },
   passwordChangedAt: Date,
   passwordResetToken: String,
-  passwordResetExpireDate: Date
+  passwordResetExpireDate: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
+});
+
+userSchema.pre(/^find/, function(next) {
+  // function taking RegExp has problems with "this" type
+  (this as any).find({ active: { $ne: false } });
+  next();
 });
 
 userSchema.pre('save', async function(next) {

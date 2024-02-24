@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { inject } from 'inversify';
 import { Observable, of } from 'rxjs';
 import { AppError } from '../../model/error';
@@ -9,13 +9,14 @@ import { httpMethod } from '../../utils/decorators/http-method.decorator';
 import { params } from '../../utils/decorators/parameters.decorator';
 import { authorize } from '../../utils/decorators/authorize.decorator';
 import { ExtendedRequest } from '../../model/request';
+import { ForCookie } from '../../utils/types/for-cookie';
 
 @controller('/')
 export class AuthController {
   constructor(@inject(UserService) private readonly userService: UserService) { }
 
   @httpMethod('post', '/signup')
-  public signup(@params('body') user: IUser): Observable<IUser> {
+  public signup(@params('body') user: IUser): Observable<ForCookie<IUser>> {
     return this.userService.createUserAndToken$(user);
   }
 
@@ -23,7 +24,7 @@ export class AuthController {
   public login(
     @params('body') credentials: { email: string; password: string },
     @params('response') response: Response,
-  ): Observable<string | AppError> {
+  ): Observable<ForCookie<string> | AppError> {
     const { email, password } = credentials;
     if (!email || !password) {
       throw new AppError(
@@ -51,7 +52,7 @@ export class AuthController {
   public resetPassword(
     @params('params', 'token') resetToken: string,
     @params('body') data: { password: string; passwordConfirm: string },
-  ): Observable<string | AppError> {
+  ): Observable<ForCookie<string> | AppError> {
     return this.userService.resetPassword$(
       resetToken,
       data.password,
@@ -69,7 +70,7 @@ export class AuthController {
       password: string;
       passwordConfirm: string;
     },
-  ): Observable<string | AppError> {
+  ): Observable<ForCookie<string> | AppError> {
     return this.userService.changePassword$(
       request.locals.id,
       data.currentPassword,

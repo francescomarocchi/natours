@@ -5,7 +5,10 @@ export function handlerResponseWrapper(): Handler {
   return (request: Request, response: Response, next: NextFunction) => {
     const handlerResponse = response.locals.handlerResponse;
 
-    if (!handlerResponse || (Array.isArray(handlerResponse) && handlerResponse.length === 0)) {
+    if (
+      !handlerResponse ||
+      (Array.isArray(handlerResponse) && handlerResponse.length === 0)
+    ) {
       next();
     } else if (handlerResponse instanceof Error) {
       throw handlerResponse;
@@ -15,6 +18,9 @@ export function handlerResponseWrapper(): Handler {
         case 'POST':
           statusCode = 201;
           break;
+        case 'DELETE':
+          statusCode = 204;
+          break;
       }
 
       // TODO: this sucks, find a better way
@@ -22,7 +28,9 @@ export function handlerResponseWrapper(): Handler {
         statusCode = response.locals.statusCode;
       }
 
-      response.status(statusCode).json(createAppResponse(handlerResponse, 'success'));
+      response
+        .status(statusCode)
+        .json(createAppResponse(handlerResponse, 'success'));
     }
   };
 }

@@ -1,39 +1,43 @@
-import { NextFunction, Request, Response } from 'express';
 import { controller } from '../../utils/decorators/controller.decorator';
 import { httpMethod } from '../../utils/decorators/http-method.decorator';
 import { params } from '../../utils/decorators/parameters.decorator';
-import { IUser, User } from '../../model/user';
-import { Observable, from, map } from 'rxjs';
-
-const users = [
-  { id: 1, name: 'beavis' },
-  { id: 2, name: 'butthead' },
-];
+import { authorize } from '../../utils/decorators/authorize.decorator';
+import { UserService } from '../../services/users.service';
+import { inject } from 'inversify';
+import { ExtendedRequest } from '../../model/request';
+import { Observable } from 'rxjs';
+import { IUser, UserRoles } from '../../model/user';
+import { AppError } from '../../model/error';
+import { EMPTY } from '../../utils/types/empty';
 
 @controller('/api/v1/users')
 export class UsersController {
+  constructor(@inject(UserService) private readonly userService: UserService) { }
+
+  @authorize()
   @httpMethod('get', '/')
-  private getUsers(): Observable<unknown> {
-    return from(User.find());
+  public getUsers(): Observable<IUser | IUser[]> {
+    return this.userService.getUsers$();
   }
 
-  @httpMethod('post', '/')
-  private createUser(request: Request, response: Response, next: NextFunction): void {
-    throw new Error('Post not implemented yet');
+  @authorize()
+  @httpMethod('patch', '/update-authenticated-user')
+  public updateAuthenticatedUser(
+    @params('request') request: ExtendedRequest,
+    @params('body') body: { name: string; email: string },
+  ): Observable<AppError | IUser> {
+    return this.userService.updateAuthenticatedUser$(
+      request.locals.id,
+      body.name,
+      body.email,
+    );
   }
 
-  @httpMethod('get', '/:id')
-  public getUser(@params('params', 'id') id: string): unknown {
-    return users.find((u) => u.id === Number(id));
-  }
-
-  @httpMethod('patch', '/:id')
-  private updateUser(request: Request, response: Response, next: NextFunction): void {
-    throw new Error('not implemented yet');
-  }
-
-  @httpMethod('delete', '/:id')
-  private deleteUser(request: Request, response: Response, next: NextFunction): void {
-    throw new Error('delete not implemented yet');
+  @authorize()
+  @httpMethod('delete', '/delete-authenticated-user')
+  public deleteAuthenticatedUser(
+    @params('request') request: ExtendedRequest,
+  ): Observable<AppError | EMPTY> {
+    return this.userService.deleteUser$(request.locals.id);
   }
 }
