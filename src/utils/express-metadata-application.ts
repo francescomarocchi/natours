@@ -26,7 +26,7 @@ export class ExpressMetadataApplication {
 
   // We can get instance of user service here to be used for checks in TODOS in this file
 
-  private constructor(private readonly container: Container) { }
+  private constructor(private readonly container: Container) {}
 
   public static create(container: Container): ExpressMetadataApplication {
     return new ExpressMetadataApplication(container);
@@ -94,12 +94,12 @@ export class ExpressMetadataApplication {
             const authorizeHandler = createAuthorizeHandler(accessor.roles);
             router
               .route(methodMetadata.path)
-            [methodMetadata.method](authorizeHandler);
+              [methodMetadata.method](authorizeHandler);
           }
 
           router
             .route(methodMetadata.path)
-          [methodMetadata.method](routeHandler);
+            [methodMetadata.method](routeHandler);
         });
 
         this.app.use(controllerMetadata.path, router);
@@ -124,11 +124,17 @@ export class ExpressMetadataApplication {
     return this;
   }
 
+  public addApiMiddleware(handler: unknown): ExpressMetadataApplication {
+    this.app.use('/api', handler as Handler);
+    return this;
+  }
+
   public startListening(): void {
     const port = process.env.PORT || 8080;
     const server = this.app.listen(port, () => {
       console.log(
-        `Running in ${this.isDevelopment ? 'development' : 'production'
+        `Running in ${
+          this.isDevelopment ? 'development' : 'production'
         } mode on port ${port} 🤙`,
       );
     });

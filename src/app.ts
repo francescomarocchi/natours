@@ -5,6 +5,7 @@ import container from './container';
 import { errorCatcher } from './middleware/error-catcher';
 import { handlerResponseWrapper } from './middleware/handler-response-wrapper';
 import { notFoundCatcher } from './middleware/not-found-catcher';
+import { expressRateLimit } from './middleware/rate-limiter';
 import { CONNECTION_STRING } from './utils/constants';
 import { ExpressMetadataApplication } from './utils/express-metadata-application';
 
@@ -16,6 +17,7 @@ import './routes/controllers/auth-controller';
 ExpressMetadataApplication.create(container)
   .addDevMiddleware(morgan('dev'))
   .addMiddleware(express.json())
+  .addApiMiddleware(expressRateLimit())
   .parseControllers()
   .addMiddleware(handlerResponseWrapper())
   .addMiddleware(notFoundCatcher())
