@@ -1,5 +1,8 @@
 import express from 'express';
+import helmet from 'helmet';
+import hpp from 'hpp';
 import mongoose from 'mongoose';
+import mongoSanitize from 'express-mongo-sanitize';
 import morgan from 'morgan';
 import container from './container';
 import { errorCatcher } from './middleware/error-catcher';
@@ -15,9 +18,24 @@ import './routes/controllers/users-controller';
 import './routes/controllers/auth-controller';
 
 ExpressMetadataApplication.create(container)
+  .addMiddleware(helmet())
   .addDevMiddleware(morgan('dev'))
-  .addMiddleware(express.json())
   .addApiMiddleware(expressRateLimit())
+  .addMiddleware(express.json({ limit: '10kb' }))
+  .addMiddleware(mongoSanitize())
+  // find and add a good xss sanitizer!
+  .addMiddleware(
+    hpp({
+      whitelist: [
+        'duration',
+        'ratingsQuantity',
+        'ratingsAverage',
+        'maxGroupSize',
+        'difficulty',
+        'price',
+      ],
+    }),
+  )
   .parseControllers()
   .addMiddleware(handlerResponseWrapper())
   .addMiddleware(notFoundCatcher())
