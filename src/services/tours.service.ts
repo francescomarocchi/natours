@@ -1,19 +1,14 @@
 import { injectable } from 'inversify';
 import { Observable, from } from 'rxjs';
 import { ITour, Tour } from '../model/tour';
-import { find } from '../utils/find';
 import { TourRatingAggregate } from '../model/tour-rating-aggregate';
 import { TourMonthlyPlanAggregate } from '../model/tour-monthly-plan-aggregate';
+import { Rudi } from './rudi';
 
 @injectable()
-export class ToursService {
-  public getTours$(filter: ITour): Observable<ITour[]> {
-    const query = find(Tour, filter);
-    return from(query.exec());
-  }
-
-  public getTour$(id: string): Observable<ITour | null> {
-    return from(Tour.findById(id).exec());
+export class ToursService extends Rudi<ITour> {
+  constructor() {
+    super(Tour);
   }
 
   public getTourStatistics$(): Observable<TourRatingAggregate[]> {
@@ -78,19 +73,5 @@ export class ToursService {
         },
       ]).exec(),
     );
-  }
-
-  public createTour$(tour: ITour): Observable<ITour> {
-    return from(Tour.create(tour));
-  }
-
-  public updateTour$(id: string, tour: ITour): Observable<ITour | null> {
-    return from(
-      Tour.findByIdAndUpdate(id, tour, { new: true, runValidators: true }),
-    );
-  }
-
-  public deleteTour$(id: string): Observable<ITour | null> {
-    return from(Tour.findByIdAndDelete(id));
   }
 }

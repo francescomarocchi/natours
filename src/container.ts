@@ -3,18 +3,22 @@ import express, { Express } from 'express';
 import { Container } from 'inversify';
 import 'reflect-metadata'; // Used by inversify, MANDATORY
 import { ToursService } from './services/tours.service';
+import { UserService } from './services/users.service';
+import { ReviewsService } from './services/reviews.service';
 import {
   CONNECTION_STRING,
   DATA_FOLDER_PATH,
   IS_DEVELOPMENT,
   JWT_COOKIE_EXPIRES_IN,
 } from './utils/constants';
-import { UserService } from './services/users.service';
 
 // path is intended as NODE path (where node is launched)
 dotenv.config({ path: 'config.env' });
 
-const container: Container = new Container({ defaultScope: 'Singleton' });
+const container: Container = new Container({
+  defaultScope: 'Singleton',
+  skipBaseClassChecks: true,
+});
 
 container
   .bind<string>(DATA_FOLDER_PATH)
@@ -31,16 +35,17 @@ container
     (process.env.JWT_COOKIE_EXPIRES_IN
       ? Number(process.env.JWT_COOKIE_EXPIRES_IN)
       : 30) *
-    24 *
-    60 *
-    60 *
-    1_000,
+      24 *
+      60 *
+      60 *
+      1_000,
   );
 
 // TODO: every configuration value can be set here in container
 
 container.bind<Express>('app').toFactory(() => express());
 container.bind<ToursService>(ToursService).to(ToursService);
+container.bind<ReviewsService>(ReviewsService).to(ReviewsService);
 container.bind<UserService>(UserService).to(UserService);
 
 export default container;

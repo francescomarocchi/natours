@@ -6,8 +6,10 @@ export function handlerResponseWrapper(): Handler {
     const handlerResponse = response.locals.handlerResponse;
 
     if (
-      !handlerResponse ||
-      (Array.isArray(handlerResponse) && handlerResponse.length === 0)
+      // Why did I do it like this?????
+      // !handlerResponse ||
+      // (Array.isArray(handlerResponse) && handlerResponse.length === 0)
+      false
     ) {
       next();
     } else if (handlerResponse instanceof Error) {
