@@ -4,9 +4,8 @@ import { params } from '../../utils/decorators/parameters.decorator';
 import { authorize } from '../../utils/decorators/authorize.decorator';
 import { UserService } from '../../services/users.service';
 import { inject } from 'inversify';
-import { ExtendedRequest } from '../../model/request';
 import { Observable } from 'rxjs';
-import { IUser, UserRoles } from '../../model/user';
+import { IUser } from '../../model/user';
 import { AppError } from '../../model/error';
 import { EMPTY } from '../../utils/types/empty';
 
@@ -23,11 +22,11 @@ export class UsersController {
   @authorize()
   @httpMethod('patch', '/update-authenticated-user')
   public updateAuthenticatedUser(
-    @params('request') request: ExtendedRequest,
+    @params('user') userId: string,
     @params('body') body: { name: string; email: string },
   ): Observable<AppError | IUser> {
     return this.userService.updateAuthenticatedUser$(
-      request.locals.id,
+      userId,
       body.name,
       body.email,
     );
@@ -36,8 +35,8 @@ export class UsersController {
   @authorize()
   @httpMethod('delete', '/delete-authenticated-user')
   public deleteAuthenticatedUser(
-    @params('request') request: ExtendedRequest,
+    @params('user') userId: string,
   ): Observable<AppError | EMPTY> {
-    return this.userService.deleteUser$(request.locals.id);
+    return this.userService.deleteUser$(userId);
   }
 }

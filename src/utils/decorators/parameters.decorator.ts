@@ -7,22 +7,23 @@ export const params = (type: PARAMETER, parameterName?: string) => {
   return (
     target: { constructor: NewableFunction },
     methodName: string | symbol,
-    index: number
+    index: number,
   ): void => {
     let metadataList: ParametersMetadata = {};
     let parameterMetadataList: ParameterMetadata[] = [];
     const parameterMetadata: ParameterMetadata = {
       index,
-      injectRoot: parameterName === undefined,
       parameterName,
       type,
     };
-    if (!Reflect.hasOwnMetadata(CONTROLLER_METHOD_PARAMETER, target.constructor)) {
+    if (
+      !Reflect.hasOwnMetadata(CONTROLLER_METHOD_PARAMETER, target.constructor)
+    ) {
       parameterMetadataList.unshift(parameterMetadata);
     } else {
       metadataList = Reflect.getOwnMetadata(
         CONTROLLER_METHOD_PARAMETER,
-        target.constructor
+        target.constructor,
       ) as ParametersMetadata;
       if (metadataList[methodName as string]) {
         parameterMetadataList = metadataList[methodName as string] || [];
@@ -30,20 +31,26 @@ export const params = (type: PARAMETER, parameterName?: string) => {
       parameterMetadataList.unshift(parameterMetadata);
     }
     metadataList[methodName as string] = parameterMetadataList;
-    Reflect.defineMetadata(CONTROLLER_METHOD_PARAMETER, metadataList, target.constructor);
+    Reflect.defineMetadata(
+      CONTROLLER_METHOD_PARAMETER,
+      metadataList,
+      target.constructor,
+    );
   };
 };
 
-export const getParametersMetadata = (ctor: NewableFunction): ParametersMetadata => {
+export const getParametersMetadata = (
+  ctor: NewableFunction,
+): ParametersMetadata => {
   // Constructor metadata
   const methodMetadata: ParametersMetadata = Reflect.getOwnMetadata(
     CONTROLLER_METHOD_PARAMETER,
-    ctor
+    ctor,
   ) as ParametersMetadata;
   // Prototype metadata
   const genericMetadata: ParametersMetadata = Reflect.getMetadata(
     CONTROLLER_METHOD_PARAMETER,
-    Reflect.getPrototypeOf(ctor) as NewableFunction
+    Reflect.getPrototypeOf(ctor) as NewableFunction,
   ) as ParametersMetadata;
   return { ...methodMetadata, ...genericMetadata };
 };

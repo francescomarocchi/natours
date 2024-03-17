@@ -29,12 +29,12 @@ const reviewSchema = new Schema<IReview>(
     user: {
       type: mongoose.Types.ObjectId,
       ref: 'user',
-      required: [true, 'Review must specify a tour!'],
+      required: [true, 'A review must specify the user who wrote it!'],
     },
     tour: {
       type: mongoose.Types.ObjectId,
       ref: 'tour',
-      required: [true, 'A review must specify the user who wrote it!'],
+      required: [true, 'Review must specify a tour!'],
     },
   },
   {
@@ -52,9 +52,8 @@ const findQueryMiddleware: MongooseQueryMiddleware[] = [
   'findOneAndReplace',
 ];
 
-reviewSchema.pre(findQueryMiddleware, function (next) {
-  this.populate('user', '-__v -passwordChangedAt');
-  this.populate('tour', '-__v');
+reviewSchema.pre(findQueryMiddleware, function(next) {
+  this.populate('user', 'name');
   next();
 });
 

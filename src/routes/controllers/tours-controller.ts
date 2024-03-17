@@ -9,12 +9,17 @@ import { authorize } from '../../utils/decorators/authorize.decorator';
 import { controller } from '../../utils/decorators/controller.decorator';
 import { httpMethod } from '../../utils/decorators/http-method.decorator';
 import { params } from '../../utils/decorators/parameters.decorator';
+import { RouterBinding } from '../../utils/types/newable-function-with-properties';
 
 @controller('/api/v1/tours')
 export class ToursController {
   constructor(
     @inject(ToursService) private readonly toursService: ToursService,
-  ) {}
+  ) { }
+
+  public bindRouter(): RouterBinding {
+    return { local: '/:tourId/reviews', target: '/api/v1/reviews' };
+  }
 
   @httpMethod('get', '/')
   public getTours(@params('query') query: ITour): Observable<ITour[]> {

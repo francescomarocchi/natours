@@ -10,9 +10,9 @@ import { ParameterMetadata } from './interfaces/parameter-metadata';
 import { isObservable, take } from 'rxjs';
 import { UserRoles } from '../model/user';
 import { AppError } from '../model/error';
-import { ExtendedRequest } from '../model/request';
 import { ForCookie, isForCookie } from './types/for-cookie';
 
+// Factory function returning the REAL HANDLER bound to express route
 export const createRouteHandler = (
   method: (...args: unknown[]) => unknown,
   parametersMetadata: ParameterMetadata[],
@@ -21,6 +21,19 @@ export const createRouteHandler = (
 ): Handler => {
   return (request: Request, response: Response, next: NextFunction) => {
     const args: unknown[] = [request, response, next];
+
+    const token = request.headers['authorization']?.startsWith('Bearer')
+      ? request.headers['authorization'].split(' ')[1]
+      : undefined;
+
+    const user = { id: undefined, role: undefined };
+
+    if (token) {
+      const decodedToken = jwt.decode(token) as JwtPayload;
+      user.id = decodedToken.id;
+      user.role = decodedToken.role;
+    }
+
     parametersMetadata?.forEach((parameter) => {
       switch (parameter.type) {
         case 'response':
@@ -28,6 +41,9 @@ export const createRouteHandler = (
           break;
         case 'request':
           args[parameter.index] = request;
+          break;
+        case 'next':
+          args[parameter.index] = next;
           break;
         case 'params':
           if (!parameter.parameterName) {
@@ -43,8 +59,11 @@ export const createRouteHandler = (
         case 'query':
           args[parameter.index] = request.query;
           break;
-        case 'next':
-          args[parameter.index] = next;
+        case 'user':
+          args[parameter.index] = user.id;
+          break;
+        case 'role':
+          args[parameter.index] = user.role;
           break;
       }
     });
@@ -118,12 +137,6 @@ export const createAuthorizeHandler = (roles?: UserRoles[]): Handler => {
         return next(new AppError('Token expired, please login again', 401));
       }
     }
-
-    // Since we're here we can export user data to request for future usage
-    (request as ExtendedRequest).locals = {
-      id: decodedToken['id'],
-      role: role,
-    };
 
     // 3. Is user still existing?
     // TODO: NOT IMPLEMENTED, SELECT USER AND CHECK IF EXISTING PICKING UP ID FROM TOKEN

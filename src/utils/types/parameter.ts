@@ -7,4 +7,6 @@ export type PARAMETER =
   | 'headers'
   | 'cookies'
   | 'next'
-  | 'principal';
+  | 'principal'
+  | 'user'
+  | 'role';

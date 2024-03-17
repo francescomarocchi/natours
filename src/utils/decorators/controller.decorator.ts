@@ -1,11 +1,13 @@
-import { decorate, injectable } from "inversify";
-import { CONTROLLER } from "../constants";
-import { ControllerMetadata } from "../interfaces/controller-metadata";
+import { decorate, injectable } from 'inversify';
+import { CONTROLLER } from '../constants';
+import { ControllerMetadata } from '../interfaces/controller-metadata';
+import { RouterOptions } from 'express';
 
-export const controller = (path: string) => {
+export const controller = (path: string, options?: RouterOptions) => {
   return (target: NewableFunction): void => {
     const currentMetadata: ControllerMetadata = {
       path,
+      options,
       target,
     };
 

@@ -4,7 +4,7 @@ import { find } from '../utils/find';
 import { WithQueryParams } from '../utils/types/with-query-params';
 
 export class Rudi<T> {
-  protected constructor(private readonly model: Model<T>) {}
+  protected constructor(protected readonly model: Model<T>) {}
 
   public getList$(filter: WithQueryParams<T>): Observable<T[]> {
     const query = find(this.model, filter);

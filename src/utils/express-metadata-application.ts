@@ -1,4 +1,4 @@
-import express, { Express, Handler } from 'express';
+import express, { Express, Handler, Router } from 'express';
 import { Container } from 'inversify';
 import { CONTROLLER, IS_DEVELOPMENT, JWT_COOKIE_EXPIRES_IN } from './constants';
 import { getMethodsAccessor } from './decorators/authorize.decorator';
@@ -23,10 +23,11 @@ export class ExpressMetadataApplication {
   private readonly jwtCookieExpiresIn = this.container.get<number>(
     JWT_COOKIE_EXPIRES_IN,
   );
+  private readonly routers = new Map<string, Router>([]);
 
   // We can get instance of user service here to be used for checks in TODOS in this file
 
-  private constructor(private readonly container: Container) {}
+  private constructor(private readonly container: Container) { }
 
   public static create(container: Container): ExpressMetadataApplication {
     return new ExpressMetadataApplication(container);
@@ -35,6 +36,7 @@ export class ExpressMetadataApplication {
   public parseControllers(): ExpressMetadataApplication {
     // Get controllers from metadata
     const controllers: NewableFunction[] = getControllers();
+
     // ...and bind them in container
     controllers.forEach((controller) => {
       this.container
@@ -45,6 +47,22 @@ export class ExpressMetadataApplication {
     // The way to get controller instances is through container
     const controllersFromContainer: NewableFunctionWithProperties[] =
       this.container.getAll<NewableFunctionWithProperties>(CONTROLLER);
+
+    // Early router creation as they need
+    // to be used in conjunction for routing merge
+    controllersFromContainer.forEach(
+      (controller: NewableFunctionWithProperties) => {
+        // Get controller metadata
+        const controllerMetadata: ControllerMetadata = getControllerMetadata(
+          controller.constructor,
+        );
+
+        this.routers.set(
+          controllerMetadata.path,
+          express.Router(controllerMetadata.options),
+        );
+      },
+    );
 
     controllersFromContainer.forEach(
       (controller: NewableFunctionWithProperties) => {
@@ -66,7 +84,27 @@ export class ExpressMetadataApplication {
           controller.constructor,
         );
 
-        const router = express.Router();
+        const localRouter = this.routers.get(controllerMetadata.path);
+
+        if (!localRouter) {
+          throw new Error(
+            'Something really bad happened with routers configuration!',
+          );
+        }
+
+        if (controller.bindRouter) {
+          // TODO: Now just a single entry, this must be an array!
+          const routeBinding = controller.bindRouter();
+          const targetRouter = this.routers.get(routeBinding.target);
+
+          if (!targetRouter) {
+            throw new Error(
+              'No target route found. Please check if path is correct!',
+            );
+          }
+
+          localRouter.use(routeBinding.local, targetRouter);
+        }
 
         methodsMetadata?.forEach((methodMetadata) => {
           const method = controller[methodMetadata.key] as () => unknown;
@@ -92,17 +130,17 @@ export class ExpressMetadataApplication {
           );
           if (accessor) {
             const authorizeHandler = createAuthorizeHandler(accessor.roles);
-            router
+            localRouter
               .route(methodMetadata.path)
-              [methodMetadata.method](authorizeHandler);
+            [methodMetadata.method](authorizeHandler);
           }
 
-          router
+          localRouter
             .route(methodMetadata.path)
-            [methodMetadata.method](routeHandler);
+          [methodMetadata.method](routeHandler);
         });
 
-        this.app.use(controllerMetadata.path, router);
+        this.app.use(controllerMetadata.path, localRouter);
       },
     );
     return this;
@@ -133,8 +171,7 @@ export class ExpressMetadataApplication {
     const port = process.env.PORT || 8080;
     const server = this.app.listen(port, () => {
       console.log(
-        `Running in ${
-          this.isDevelopment ? 'development' : 'production'
+        `Running in ${this.isDevelopment ? 'development' : 'production'
         } mode on port ${port} 🤙`,
       );
     });

@@ -11,6 +11,10 @@ export class ToursService extends Rudi<ITour> {
     super(Tour);
   }
 
+  public get$(id: string): Observable<ITour | null> {
+    return from(this.model.findById(id).populate('reviews').exec());
+  }
+
   public getTourStatistics$(): Observable<TourRatingAggregate[]> {
     /**
      * This is the aggregation pipeline.

@@ -8,7 +8,6 @@ import { controller } from '../../utils/decorators/controller.decorator';
 import { httpMethod } from '../../utils/decorators/http-method.decorator';
 import { params } from '../../utils/decorators/parameters.decorator';
 import { authorize } from '../../utils/decorators/authorize.decorator';
-import { ExtendedRequest } from '../../model/request';
 import { ForCookie } from '../../utils/types/for-cookie';
 
 @controller('/')
@@ -63,16 +62,16 @@ export class AuthController {
   @authorize()
   @httpMethod('patch', '/change-password')
   public changePassword(
-    @params('request') request: ExtendedRequest,
     @params('body')
     data: {
       currentPassword: string;
       password: string;
       passwordConfirm: string;
     },
+    @params('user') userId: string,
   ): Observable<ForCookie<string> | AppError> {
     return this.userService.changePassword$(
-      request.locals.id,
+      userId,
       data.currentPassword,
       data.password,
       data.passwordConfirm,
