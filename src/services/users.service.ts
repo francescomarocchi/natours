@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { injectable } from 'inversify';
 import jwt from 'jsonwebtoken';
+import { injectable } from 'inversify';
 import { Document } from 'mongoose';
 import { Observable, combineLatest, from, map, of, switchMap } from 'rxjs';
 import { AppError } from '../model/error';
@@ -9,9 +9,15 @@ import { IUser, User, UserRoles } from '../model/user';
 import { sendForgotPasswordEmail } from '../utils/operators/send-forgot-password-email';
 import { EMPTY } from '../utils/types/empty';
 import { ForCookie } from '../utils/types/for-cookie';
+import { Rudi } from './rudi';
+import { WithQueryParams } from '../utils/types/with-query-params';
 
 @injectable()
-export class UserService {
+export class UserService extends Rudi<IUser> {
+  constructor() {
+    super(User);
+  }
+
   public createUserAndToken$(user: IUser): Observable<ForCookie<IUser>> {
     return from(
       User.create({
@@ -36,10 +42,6 @@ export class UserService {
 
   public getUser$(email: string): Observable<IUser | null> {
     return from(User.findOne<IUser>({ email }));
-  }
-
-  public getUsers$(): Observable<IUser | IUser[]> {
-    return from(User.find<IUser>());
   }
 
   public login$(

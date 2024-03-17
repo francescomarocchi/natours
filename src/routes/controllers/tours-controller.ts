@@ -49,6 +49,7 @@ export class ToursController {
     return this.toursService.getTourStatistics$();
   }
 
+  @authorize([UserRoles.Admin, UserRoles.LeadGuide, UserRoles.Guide])
   @httpMethod('get', '/monthly-plan/:year')
   public getMonthlyPlan(
     @params('params', 'year') year: string,

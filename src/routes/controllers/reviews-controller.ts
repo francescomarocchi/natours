@@ -6,7 +6,7 @@ import { httpMethod } from '../../utils/decorators/http-method.decorator';
 import { params } from '../../utils/decorators/parameters.decorator';
 import { ReviewsService } from '../../services/reviews.service';
 import { IReview } from '../../model/review';
-import { UserRoles } from '../../model/user';
+import { User, UserRoles } from '../../model/user';
 
 @controller('/api/v1/reviews', { mergeParams: true })
 export class ReviewsController {
@@ -14,15 +14,12 @@ export class ReviewsController {
     @inject(ReviewsService) private readonly reviewsService: ReviewsService,
   ) { }
 
+  @authorize([UserRoles.User])
   @httpMethod('get', '/')
   public getReviews(
     @params('query') query: IReview,
     @params('params', 'tourId') tourId: string,
   ): Observable<IReview[]> {
-    // When route merged from Tours
-    // TODO: this (and the one below) could be shifted in a new decorator
-    //       that will add a new route.use before the actual handler to merge
-    //       the tour Id inside the body somehow?
     if (tourId) {
       query.tour = tourId as any;
     }
@@ -34,6 +31,7 @@ export class ReviewsController {
     );
   }
 
+  @authorize([UserRoles.User])
   @httpMethod('get', '/:id')
   public getReview(
     @params('params', 'id') id: string,
@@ -57,7 +55,7 @@ export class ReviewsController {
     return this.reviewsService.create$(review);
   }
 
-  @authorize()
+  @authorize([UserRoles.User, UserRoles.Admin])
   @httpMethod('patch', '/:id')
   public updateReview(
     @params('body') review: IReview,
@@ -66,7 +64,7 @@ export class ReviewsController {
     return this.reviewsService.update$(id, review);
   }
 
-  @authorize()
+  @authorize([UserRoles.User, UserRoles.Admin])
   @httpMethod('delete', '/:id')
   public deleteReview(
     @params('params', 'id') id: string,

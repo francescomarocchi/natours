@@ -5,7 +5,7 @@ import { authorize } from '../../utils/decorators/authorize.decorator';
 import { UserService } from '../../services/users.service';
 import { inject } from 'inversify';
 import { Observable } from 'rxjs';
-import { IUser } from '../../model/user';
+import { IUser, UserRoles } from '../../model/user';
 import { AppError } from '../../model/error';
 import { EMPTY } from '../../utils/types/empty';
 
@@ -13,10 +13,47 @@ import { EMPTY } from '../../utils/types/empty';
 export class UsersController {
   constructor(@inject(UserService) private readonly userService: UserService) { }
 
-  @authorize()
+  @authorize([UserRoles.Admin])
   @httpMethod('get', '/')
-  public getUsers(): Observable<IUser | IUser[]> {
-    return this.userService.getUsers$();
+  public getUsers(@params('query') query: IUser): Observable<IUser | IUser[]> {
+    return this.userService.getList$(query);
+  }
+
+  @authorize([UserRoles.Admin])
+  @httpMethod('post', '/')
+  public createUser(@params('body') user: IUser): Observable<IUser | IUser[]> {
+    return this.userService.create$(user);
+  }
+
+  @authorize([UserRoles.Admin])
+  @httpMethod('get', ':id')
+  public getUser(@params('params', 'id') id: string): Observable<IUser | null> {
+    return this.userService.get$(id);
+  }
+
+  @authorize([UserRoles.Admin])
+  @httpMethod('patch', '/:id')
+  public updateUser(
+    @params('body') user: IUser,
+    @params('params', 'id') id: string,
+  ): Observable<IUser | null> {
+    return this.userService.update$(id, user);
+  }
+
+  @authorize([UserRoles.Admin])
+  @httpMethod('delete', '/:id')
+  public deleteTour(
+    @params('params', 'id') id: string,
+  ): Observable<IUser | null> {
+    return this.userService.delete$(id);
+  }
+
+  @authorize()
+  @httpMethod('get', '/me')
+  public getCurrentUser(
+    @params('user') userId: string,
+  ): Observable<IUser | null> {
+    return this.userService.get$(userId);
   }
 
   @authorize()
