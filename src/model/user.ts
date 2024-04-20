@@ -61,7 +61,7 @@ const userSchema = new Schema<IUser>({
     required: [true, 'Please provide a password'],
     validate: {
       // Remember this only works with SAVE!!!
-      validator: function(this: IUser, element: string): boolean {
+      validator: function (this: IUser, element: string): boolean {
         return element === this.password;
       },
       message: 'Passwords are not matching',
@@ -77,13 +77,13 @@ const userSchema = new Schema<IUser>({
   },
 });
 
-userSchema.pre(/^find/, function(next) {
+userSchema.pre(/^find/, function (next) {
   // function taking RegExp has problems with "this" type
   (this as any).find({ active: { $ne: false } });
   next();
 });
 
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
@@ -95,14 +95,14 @@ userSchema.pre('save', async function(next) {
 
 // TODO: in case implement this, is intended to block token validity
 // if user has changed its password after token has been generated
-userSchema.methods.changedPasswordAfter = function(jwtTimestamp: Date) {
+userSchema.methods.changedPasswordAfter = function (jwtTimestamp: Date) {
   if (this.passwordChangedAt) {
     return this.passwordChangedAt > jwtTimestamp;
   }
   return false;
 };
 
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
   if (!this.isModified('password') || this.isNew) {
     return next();
   }
@@ -111,7 +111,7 @@ userSchema.pre('save', function(next) {
 });
 
 userSchema.methods.createPasswordResetToken =
-  async function(): Promise<string> {
+  async function (): Promise<string> {
     const resetToken = crypto.randomBytes(32).toString('hex');
     this.passwordResetToken = crypto
       .createHash('sha256')
