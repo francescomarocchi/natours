@@ -61,6 +61,7 @@ const tourSchema = new Schema<ITour>(
       default: 4.5,
       min: [1, 'Rating must be above or equal 1.0'],
       max: [5, 'Rating must be below or equal 5.0'],
+      set: (v: number) => Math.round(v * 10) / 10,
     },
     ratingsQuantity: { type: Number, default: 0 },
     rating: { type: Number, default: 4.5 },
@@ -68,7 +69,7 @@ const tourSchema = new Schema<ITour>(
     priceDiscount: {
       type: Number,
       validate: {
-        validator: function (this: ITour, value: number) {
+        validator: function(this: ITour, value: number) {
           // this will be valued just when creating new document, undefined when update
           return value < this.price;
         },
@@ -131,8 +132,11 @@ const tourSchema = new Schema<ITour>(
   },
 );
 
+tourSchema.index({ price: 1 });
+tourSchema.index({ slug: 1 });
+
 // not queryable!
-tourSchema.virtual('durationWeeks').get(function () {
+tourSchema.virtual('durationWeeks').get(function() {
   return Math.round(this.duration / 7);
 });
 
@@ -143,7 +147,7 @@ tourSchema.virtual('reviews', {
 });
 
 // Executed before .save() and .create()
-tourSchema.pre('save', function (next) {
+tourSchema.pre('save', function(next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
@@ -161,18 +165,18 @@ const findQueryMiddleware: MongooseQueryMiddleware[] = [
   'findOneAndReplace',
 ];
 
-tourSchema.pre(findQueryMiddleware, function (next) {
+tourSchema.pre(findQueryMiddleware, function(next) {
   this.populate('guides', '-__v -passwordChangedAt');
   next();
 });
 
-tourSchema.pre(findQueryMiddleware, function (next) {
+tourSchema.pre(findQueryMiddleware, function(next) {
   this.find({ secretTour: { $ne: true } });
   start = performance.now();
   next();
 });
 
-tourSchema.post(findQueryMiddleware, function (_, next) {
+tourSchema.post(findQueryMiddleware, function(_, next) {
   this.find({ secretTour: { $ne: true } });
   const elapsed = performance.now() - start;
   console.log(`find took ${elapsed} milliseconds`);
@@ -181,7 +185,7 @@ tourSchema.post(findQueryMiddleware, function (_, next) {
 
 // Aggregation middleware
 
-tourSchema.pre('aggregate', function (next) {
+tourSchema.pre('aggregate', function(next) {
   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
   next();
 });

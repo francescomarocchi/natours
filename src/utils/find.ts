@@ -13,8 +13,15 @@ import { WithQueryParams } from './types/with-query-params';
 export const find = <T>(
   model: Model<T>,
   filter: WithQueryParams<T>,
-  defaultOrder: string = '-createdAt'
+  defaultOrder: string = '-createdAt',
 ) => {
+  let stringifiedFilter = JSON.stringify(filter);
+  stringifiedFilter = stringifiedFilter.replace(
+    /\b(gte|gt|lte|lt)\b/g,
+    (match) => `$${match}`,
+  );
+  filter = JSON.parse(stringifiedFilter);
+
   const safeFilter = Object.entries(filter as {}).reduce(
     (accumulator, [currentName, currentValue]) => {
       if (Object.keys(model.schema.obj).includes(currentName)) {
@@ -22,12 +29,13 @@ export const find = <T>(
       }
       return accumulator;
     },
-    {} as FilterQuery<T>
+    {} as FilterQuery<T>,
   );
 
   const { sort, fields, page, limit } = filter;
 
-  const pagination = page && limit ? { skip: (+page - 1) * +limit, limit: +limit } : undefined;
+  const pagination =
+    page && limit ? { skip: (+page - 1) * +limit, limit: +limit } : undefined;
 
   return model.find(safeFilter, fields ?? '-__v', {
     ...pagination,

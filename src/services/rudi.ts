@@ -7,7 +7,7 @@ export class Rudi<T> {
   protected constructor(protected readonly model: Model<T>) { }
 
   public getList$(filter: WithQueryParams<T>): Observable<T[]> {
-    const query = find(this.model, filter);
+    const query = find(this.model, filter).explain();
     return from(query.exec());
   }
 
@@ -15,13 +15,13 @@ export class Rudi<T> {
     return from(this.model.findById(id).exec());
   }
 
-  public create$(tour: T): Observable<T> {
-    return from(this.model.create(tour));
+  public create$(review: T): Observable<T> {
+    return from(this.model.create(review));
   }
 
-  public update$(id: string, tour: WithQueryParams<T>): Observable<T | null> {
+  public update$(id: string, review: WithQueryParams<T>): Observable<T | null> {
     return from(
-      this.model.findByIdAndUpdate(id, tour, {
+      this.model.findByIdAndUpdate(id, review, {
         new: true,
         runValidators: true,
       }),
