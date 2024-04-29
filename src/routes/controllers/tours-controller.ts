@@ -1,21 +1,22 @@
 import { inject } from 'inversify';
-import { Observable, tap } from 'rxjs';
+import { Observable, of, tap } from 'rxjs';
 import { ITour } from '../../model/tour';
 import { TourMonthlyPlanAggregate } from '../../model/tour-monthly-plan-aggregate';
 import { TourRatingAggregate } from '../../model/tour-rating-aggregate';
 import { UserRoles } from '../../model/user';
-import { ToursService } from '../../services/tours.service';
+import { ToursService, Units } from '../../services/tours.service';
 import { authorize } from '../../utils/decorators/authorize.decorator';
 import { controller } from '../../utils/decorators/controller.decorator';
 import { httpMethod } from '../../utils/decorators/http-method.decorator';
 import { params } from '../../utils/decorators/parameters.decorator';
 import { RouterBinding } from '../../utils/types/newable-function-with-properties';
+import { AppError } from '../../model/error';
 
 @controller('/api/v1/tours')
 export class ToursController {
   constructor(
     @inject(ToursService) private readonly toursService: ToursService,
-  ) { }
+  ) {}
 
   public bindRouter(): RouterBinding {
     return { local: '/:tourId/reviews', target: '/api/v1/reviews' };
@@ -47,6 +48,50 @@ export class ToursController {
   @httpMethod('get', '/tour-stats')
   public getTourStats(): Observable<TourRatingAggregate[]> {
     return this.toursService.getTourStatistics$();
+  }
+
+  @httpMethod('get', '/tours-within/:distance/center/:coords/unit/:unit')
+  public getToursWithin(
+    @params('params', 'distance') distance: number,
+    @params('params', 'coords') coords: string,
+    @params('params', 'unit') unit: Units,
+  ): Observable<ITour[]> {
+    const [latitude, longitude] = coords.split(',');
+    if (
+      [latitude, longitude].some((coordinate) => isNaN(parseInt(coordinate)))
+    ) {
+      throw new AppError(
+        `latitude "${latitude}" or longitude "${longitude}" are invalid`,
+        400,
+      );
+    }
+    return this.toursService.getToursWithin$(
+      distance,
+      parseFloat(latitude),
+      parseFloat(longitude),
+      unit,
+    );
+  }
+
+  @httpMethod('get', '/distances/:coords/unit/:unit')
+  public getToursDistances(
+    @params('params', 'coords') coords: string,
+    @params('params', 'unit') unit: Units,
+  ): Observable<ITour[]> {
+    const [latitude, longitude] = coords.split(',');
+    if (
+      [latitude, longitude].some((coordinate) => isNaN(parseInt(coordinate)))
+    ) {
+      throw new AppError(
+        `latitude "${latitude}" or longitude "${longitude}" are invalid`,
+        400,
+      );
+    }
+    return this.toursService.getDistances$(
+      parseFloat(latitude),
+      parseFloat(longitude),
+      unit,
+    );
   }
 
   @authorize([UserRoles.Admin, UserRoles.LeadGuide, UserRoles.Guide])
