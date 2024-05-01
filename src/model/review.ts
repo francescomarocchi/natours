@@ -58,12 +58,12 @@ const reviewSchema = new Schema<IReview>(
 
 reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
 
-reviewSchema.pre(findQueryMiddleware, function(next) {
-  this.populate('user', 'name');
+reviewSchema.pre(findQueryMiddleware, function (next) {
+  this.populate('user', 'name photo');
   next();
 });
 
-reviewSchema.statics.calcAverageRatings = async function(
+reviewSchema.statics.calcAverageRatings = async function (
   tourId: string,
 ): Promise<void> {
   const reviewStatistics = await this.aggregate([
@@ -88,7 +88,7 @@ reviewSchema.statics.calcAverageRatings = async function(
 };
 
 // After creating a new review the tour statistic has to be udpated
-reviewSchema.post('save', function(): void {
+reviewSchema.post('save', function (): void {
   const _this = <any>this;
   _this.constructor.calcAverageRatings(this.tour);
 });
@@ -101,7 +101,7 @@ reviewSchema.post('save', function(): void {
 // after (so that if deleting an entry the entry is not there anymore)
 reviewSchema.pre(
   findByIdAndUpdateOrDeleteQueryMiddleware,
-  async function(next) {
+  async function (next) {
     const id = this.getQuery()._id.toString();
     const review = await Review.findById(id);
     (<any>this)['review'] = review;
@@ -110,7 +110,7 @@ reviewSchema.pre(
 
 reviewSchema.post(
   findByIdAndUpdateOrDeleteQueryMiddleware,
-  async function(): Promise<void> {
+  async function (): Promise<void> {
     const review = (<any>this)['review'];
     if (review) await (<any>review.constructor).calcAverageRatings(review.tour);
   },

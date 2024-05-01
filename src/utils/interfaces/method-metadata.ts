@@ -6,4 +6,5 @@ export interface MethodMetadata {
   method: HTTP_VERBS;
   path: string;
   target: Constructable;
+  statusCode?: number;
 }

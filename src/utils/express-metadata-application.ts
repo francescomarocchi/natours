@@ -15,6 +15,7 @@ import {
   createAuthorizeHandler,
   createRouteHandler,
 } from './express-metadata-application.helpers';
+import { getStatusCodeFromHttpVerb } from './types/http-verbs';
 
 export class ExpressMetadataApplication {
   private readonly app: Express = this.container.get<Express>('app');
@@ -118,6 +119,8 @@ export class ExpressMetadataApplication {
             parameters,
             this.jwtCookieExpiresIn,
             this.isDevelopment,
+            methodMetadata.statusCode ??
+            getStatusCodeFromHttpVerb(methodMetadata.method),
           );
 
           /*
@@ -164,6 +167,20 @@ export class ExpressMetadataApplication {
 
   public addApiMiddleware(handler: unknown): ExpressMetadataApplication {
     this.app.use('/api', handler as Handler);
+    return this;
+  }
+
+  public addStaticFolder(folder: string): ExpressMetadataApplication {
+    this.app.use(express.static(folder));
+    return this;
+  }
+
+  public setViewEngine(
+    engine: string,
+    viewsFolder: string,
+  ): ExpressMetadataApplication {
+    this.app.set('views', viewsFolder);
+    this.app.set('view engine', engine);
     return this;
   }
 

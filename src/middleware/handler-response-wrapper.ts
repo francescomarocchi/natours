@@ -1,38 +1,54 @@
+import { PugTemplate } from '../model/pug-template';
 import { createAppResponse } from '../utils/create-app-response';
-import { Handler, NextFunction, Request, Response } from 'express';
+import {
+  CookieOptions,
+  Handler,
+  NextFunction,
+  Request,
+  Response,
+} from 'express';
+import { ForCookie } from '../utils/types/for-cookie';
 
 export function handlerResponseWrapper(): Handler {
   return (request: Request, response: Response, next: NextFunction) => {
-    const handlerResponse = response.locals.handlerResponse;
-
-    if (
-      // Why did I do it like this?????
-      // !handlerResponse ||
-      // (Array.isArray(handlerResponse) && handlerResponse.length === 0)
-      false
-    ) {
+    // No handler found if locals haven't been populated
+    if (Object.keys(response.locals).length === 0) {
+      response.locals.notFound = true;
       next();
-    } else if (handlerResponse instanceof Error) {
+      return;
+    }
+
+    const { handlerResponse, cookieExpiration, isDevelopment, statusCode } =
+      response.locals;
+
+    if (handlerResponse instanceof Error) {
       throw handlerResponse;
-    } else {
-      let statusCode = 200;
-      switch (request.method) {
-        case 'POST':
-          statusCode = 201;
-          break;
-        case 'DELETE':
-          statusCode = 204;
-          break;
-      }
+    }
 
-      // TODO: this sucks, find a better way
-      if (response.locals.statusCode) {
-        statusCode = response.locals.statusCode;
-      }
-
+    if (handlerResponse instanceof PugTemplate) {
       response
         .status(statusCode)
-        .json(createAppResponse(handlerResponse, 'success'));
+        .render(handlerResponse.template, handlerResponse.data as object);
+      return;
     }
+
+    if (handlerResponse instanceof ForCookie) {
+      const cookieOptions: CookieOptions = {
+        expires: new Date(Date.now() + cookieExpiration),
+        httpOnly: true,
+      };
+
+      cookieOptions.secure = !isDevelopment;
+
+      response.cookie('jwt', handlerResponse.token, cookieOptions);
+      response
+        .status(statusCode)
+        .json(createAppResponse(handlerResponse.payload, 'success'));
+      return;
+    }
+
+    response
+      .status(statusCode)
+      .json(createAppResponse(handlerResponse, 'success'));
   };
 }

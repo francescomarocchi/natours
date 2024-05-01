@@ -1,16 +1,9 @@
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import {
-  CookieOptions,
-  Handler,
-  NextFunction,
-  Request,
-  Response,
-} from 'express';
+import { Handler, NextFunction, Request, Response } from 'express';
 import { ParameterMetadata } from './interfaces/parameter-metadata';
 import { isObservable, take } from 'rxjs';
 import { UserRoles } from '../model/user';
 import { AppError } from '../model/error';
-import { ForCookie, isForCookie } from './types/for-cookie';
 
 // Factory function returning the REAL HANDLER bound to express route
 export const createRouteHandler = (
@@ -18,6 +11,7 @@ export const createRouteHandler = (
   parametersMetadata: ParameterMetadata[],
   cookieExpiration: number,
   isDevelopment: boolean,
+  statusCode: number,
 ): Handler => {
   return (request: Request, response: Response, next: NextFunction) => {
     const args: unknown[] = [request, response, next];
@@ -73,14 +67,10 @@ export const createRouteHandler = (
     if (isObservable(payload)) {
       payload.pipe(take(1)).subscribe({
         next: (data) => {
-          const actualData = addPayloadToCookieResponseIfNecessary(
-            data,
-            'jwt',
-            response,
-            cookieExpiration,
-            isDevelopment,
-          );
-          response.locals.handlerResponse = actualData;
+          response.locals.cookieExpiration = cookieExpiration;
+          response.locals.isDevelopment = isDevelopment;
+          response.locals.handlerResponse = data;
+          response.locals.statusCode = statusCode;
           next();
         },
         error: (error) => {
@@ -89,14 +79,10 @@ export const createRouteHandler = (
         },
       });
     } else {
-      const actualPayload = addPayloadToCookieResponseIfNecessary(
-        payload,
-        'jwt',
-        response,
-        cookieExpiration,
-        isDevelopment,
-      );
-      response.locals.handlerResponse = actualPayload;
+      response.locals.cookieExpiration = cookieExpiration;
+      response.locals.isDevelopment = isDevelopment;
+      response.locals.handlerResponse = payload;
+      response.locals.statusCode = statusCode;
       next();
     }
   };
@@ -146,34 +132,4 @@ export const createAuthorizeHandler = (roles?: UserRoles[]): Handler => {
 
     next();
   };
-};
-
-/**
- * Checks if payload is of type ForCookie and
- * in case adds its content to response cookie.
- * In any case returns the correct payload
- */
-const addPayloadToCookieResponseIfNecessary = (
-  payload: unknown,
-  cookieName: string,
-  response: Response,
-  jwtCookieExpiresIn: number,
-  isDevelopment: boolean,
-): unknown => {
-  if (!isForCookie(payload)) {
-    return payload;
-  }
-
-  const forCookie = payload as ForCookie<unknown>;
-  const cookieOptions: CookieOptions = {
-    expires: new Date(Date.now() + jwtCookieExpiresIn),
-    httpOnly: true,
-  };
-
-  if (!isDevelopment) {
-    cookieOptions.secure = true;
-  }
-
-  response.cookie(cookieName, forCookie.token, cookieOptions);
-  return forCookie.payload;
 };

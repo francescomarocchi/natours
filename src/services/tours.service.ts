@@ -23,6 +23,15 @@ export class ToursService extends Rudi<ITour> {
     return from(this.model.findById(id).populate('reviews').exec());
   }
 
+  public getBySlug$(slug: string): Observable<ITour | null> {
+    return from(
+      this.model
+        .findOne({ slug: slug })
+        .populate('reviews', 'description rating user')
+        .exec(),
+    );
+  }
+
   public getToursWithin$(
     distance: number,
     latitude: number,

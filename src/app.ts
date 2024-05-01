@@ -18,9 +18,25 @@ import './routes/controllers/reviews-controller';
 import './routes/controllers/tours-controller';
 import './routes/controllers/users-controller';
 import './routes/controllers/auth-controller';
+import './routes/controllers/views-controller';
 
 ExpressMetadataApplication.create(container)
-  .addMiddleware(helmet())
+  .setViewEngine('pug', 'src/views')
+  .addStaticFolder('public')
+  .addMiddleware(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          'script-src': ["'self'", 'unpkg.com'],
+          'img-src': [
+            'tile.openstreetmap.org',
+            'tile.thunderforest.com',
+            'localhost:8080',
+          ],
+        },
+      },
+    })
+  )
   .addDevMiddleware(morgan('dev'))
   .addApiMiddleware(expressRateLimit())
   .addMiddleware(express.json({ limit: '10kb' }))
@@ -36,7 +52,7 @@ ExpressMetadataApplication.create(container)
         'difficulty',
         'price',
       ],
-    }),
+    })
   )
   .parseControllers()
   .addMiddleware(handlerResponseWrapper())
