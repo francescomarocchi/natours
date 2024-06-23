@@ -19,6 +19,7 @@ import './routes/controllers/tours-controller';
 import './routes/controllers/users-controller';
 import './routes/controllers/auth-controller';
 import './routes/controllers/views-controller';
+import { userRetriever } from './middleware/user';
 
 ExpressMetadataApplication.create(container)
   .setViewEngine('pug', 'src/views')
@@ -54,6 +55,7 @@ ExpressMetadataApplication.create(container)
       ],
     })
   )
+  .addMiddleware(userRetriever())
   .parseControllers()
   .addMiddleware(handlerResponseWrapper())
   .addMiddleware(notFoundCatcher())

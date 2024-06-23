@@ -63,7 +63,7 @@ export class UserService extends Rudi<IUser> {
         if (!logged) {
           return new AppError('Incorrect email or password', 401);
         }
-        const token = this.createToken(id, role);
+        const token = this.createToken(id, role as UserRoles);
         return new ForCookie(token, token);
       }),
     );

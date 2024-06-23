@@ -22,7 +22,7 @@ export interface IUser {
   passwordResetExpireDate?: Date;
   active: boolean;
 
-  changedPasswordAfter(jwtTimestamp: Date): void;
+  changedPasswordAfter(jwtTimestamp: Date): boolean;
 
   createPasswordResetToken(): string;
 }

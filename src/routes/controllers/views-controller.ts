@@ -1,6 +1,6 @@
 import { controller } from '../../utils/decorators/controller.decorator';
 import { PugTemplate } from '../../model/pug-template';
-import { Observable, map, tap } from 'rxjs';
+import { Observable, map, of, tap } from 'rxjs';
 import { httpMethod } from '../../utils/decorators/http-method.decorator';
 import { ToursService } from '../../services/tours.service';
 import { ITour } from '../../model/tour';
@@ -8,8 +8,8 @@ import { params } from '../../utils/decorators/parameters.decorator';
 
 const toPugTemplate =
   (template: string) =>
-  (source$: Observable<unknown>): Observable<PugTemplate> =>
-    source$.pipe(map((data) => new PugTemplate(template, data)));
+    (source$: Observable<unknown>): Observable<PugTemplate> =>
+      source$.pipe(map((data) => new PugTemplate(template, data)));
 
 /*
  * For some weird reason using a / as controller
@@ -17,7 +17,7 @@ const toPugTemplate =
  */
 @controller('')
 export class ViewsController {
-  constructor(private readonly toursService: ToursService) {}
+  constructor(private readonly toursService: ToursService) { }
 
   @httpMethod('get', '/')
   public overview(): Observable<PugTemplate> {
@@ -42,4 +42,10 @@ export class ViewsController {
       toPugTemplate('tour'),
     );
   }
+
+  @httpMethod('get', '/login')
+  public login(): Observable<PugTemplate> {
+    return of(void 0).pipe(toPugTemplate('login'))
+  }
+
 }

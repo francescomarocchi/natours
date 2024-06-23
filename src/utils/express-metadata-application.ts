@@ -11,11 +11,9 @@ import { getParametersMetadata } from './decorators/parameters.decorator';
 import { AuthorizeMetadata } from './interfaces/authorize-metadata';
 import { ControllerMetadata } from './interfaces/controller-metadata';
 import { NewableFunctionWithProperties } from './types/newable-function-with-properties';
-import {
-  createAuthorizeHandler,
-  createRouteHandler,
-} from './express-metadata-application.helpers';
 import { getStatusCodeFromHttpVerb } from './types/http-verbs';
+import { createRouteHandler } from './create-route-handler';
+import { createAuthorizeHandler } from './create-authorize-handler';
 
 export class ExpressMetadataApplication {
   private readonly app: Express = this.container.get<Express>('app');
@@ -114,14 +112,14 @@ export class ExpressMetadataApplication {
           }
 
           const parameters = parametersMetadata[methodMetadata.key];
-          const routeHandler = createRouteHandler(
-            method.bind(controller),
-            parameters,
-            this.jwtCookieExpiresIn,
-            this.isDevelopment,
-            methodMetadata.statusCode ??
-            getStatusCodeFromHttpVerb(methodMetadata.method),
-          );
+          const routeHandler = createRouteHandler({
+            method: method.bind(controller),
+            parametersMetadata: parameters,
+            cookieExpiration: this.jwtCookieExpiresIn,
+            isDevelopment: this.isDevelopment,
+            statusCode: methodMetadata.statusCode ??
+              getStatusCodeFromHttpVerb(methodMetadata.method),
+          });
 
           /*
            * Just if route has been marked as protected we add an extra handler

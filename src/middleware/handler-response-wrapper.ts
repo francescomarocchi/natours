@@ -10,7 +10,7 @@ import {
 import { ForCookie } from '../utils/types/for-cookie';
 
 export function handlerResponseWrapper(): Handler {
-  return (request: Request, response: Response, next: NextFunction) => {
+  return (_: Request, response: Response, next: NextFunction) => {
     // No handler found if locals haven't been populated
     if (Object.keys(response.locals).length === 0) {
       response.locals.notFound = true;
