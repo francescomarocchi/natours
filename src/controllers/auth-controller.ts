@@ -1,14 +1,14 @@
 import { Response } from 'express';
 import { inject } from 'inversify';
 import { Observable, of } from 'rxjs';
-import { AppError } from '../../model/error';
-import { IUser } from '../../model/user';
-import { UserService } from '../../services/users.service';
-import { controller } from '../../utils/decorators/controller.decorator';
-import { httpMethod } from '../../utils/decorators/http-method.decorator';
-import { params } from '../../utils/decorators/parameters.decorator';
-import { authorize } from '../../utils/decorators/authorize.decorator';
-import { ForCookie } from '../../utils/types/for-cookie';
+import { controller } from '../utils/decorators/controller.decorator';
+import { UserService } from '../services/users.service';
+import { httpMethod } from '../utils/decorators/http-method.decorator';
+import { params } from '../utils/decorators/parameters.decorator';
+import { ForCookie } from '../utils/types/for-cookie';
+import { IUser } from '../model/user';
+import { AppError } from '../model/error';
+import { authorize } from '../utils/decorators/authorize.decorator';
 
 @controller('/')
 export class AuthController {

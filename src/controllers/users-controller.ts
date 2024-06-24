@@ -1,13 +1,13 @@
-import { controller } from '../../utils/decorators/controller.decorator';
-import { httpMethod } from '../../utils/decorators/http-method.decorator';
-import { params } from '../../utils/decorators/parameters.decorator';
-import { authorize } from '../../utils/decorators/authorize.decorator';
-import { UserService } from '../../services/users.service';
 import { inject } from 'inversify';
 import { Observable } from 'rxjs';
-import { IUser, UserRoles } from '../../model/user';
-import { AppError } from '../../model/error';
-import { EMPTY } from '../../utils/types/empty';
+import { controller } from '../utils/decorators/controller.decorator';
+import { UserService } from '../services/users.service';
+import { authorize } from '../utils/decorators/authorize.decorator';
+import { IUser, UserRoles } from '../model/user';
+import { httpMethod } from '../utils/decorators/http-method.decorator';
+import { params } from '../utils/decorators/parameters.decorator';
+import { AppError } from '../model/error';
+import { EMPTY } from '../utils/types/empty';
 
 @controller('/api/v1/users')
 export class UsersController {
@@ -57,7 +57,7 @@ export class UsersController {
   }
 
   @authorize()
-  @httpMethod('patch', '/update-authenticated-user')
+  @httpMethod('patch', '/me/update-authenticated-user')
   public updateAuthenticatedUser(
     @params('user') userId: string,
     @params('body') body: { name: string; email: string },
@@ -70,7 +70,7 @@ export class UsersController {
   }
 
   @authorize()
-  @httpMethod('delete', '/delete-authenticated-user')
+  @httpMethod('delete', '/me/delete-authenticated-user')
   public deleteAuthenticatedUser(
     @params('user') userId: string,
   ): Observable<AppError | EMPTY> {

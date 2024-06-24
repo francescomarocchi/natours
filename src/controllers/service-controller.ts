@@ -1,11 +1,11 @@
 import fs from 'fs';
-import { authorize } from '../../utils/decorators/authorize.decorator';
-import { controller } from '../../utils/decorators/controller.decorator';
-import { httpMethod } from '../../utils/decorators/http-method.decorator';
-import { IUser, User, UserRoles } from '../../model/user';
 import { Observable, from } from 'rxjs';
-import { ITour, Tour } from '../../model/tour';
-import { IReview, Review } from '../../model/review';
+import { controller } from '../utils/decorators/controller.decorator';
+import { authorize } from '../utils/decorators/authorize.decorator';
+import { httpMethod } from '../utils/decorators/http-method.decorator';
+import { IUser, User, UserRoles } from '../model/user';
+import { ITour, Tour } from '../model/tour';
+import { IReview, Review } from '../model/review';
 
 @controller('/api/v1/service')
 export class ServiceController {

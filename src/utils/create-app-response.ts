@@ -1,4 +1,4 @@
-import { AppResponse } from '../routes/interfaces/app-response';
+import { AppResponse } from "./interfaces/app-response";
 
 export const createAppResponse = <T>(
   data: T,

@@ -1,16 +1,16 @@
 import { inject } from 'inversify';
 import { Observable, of, tap } from 'rxjs';
-import { ITour } from '../../model/tour';
-import { TourMonthlyPlanAggregate } from '../../model/tour-monthly-plan-aggregate';
-import { TourRatingAggregate } from '../../model/tour-rating-aggregate';
-import { UserRoles } from '../../model/user';
-import { ToursService, Units } from '../../services/tours.service';
-import { authorize } from '../../utils/decorators/authorize.decorator';
-import { controller } from '../../utils/decorators/controller.decorator';
-import { httpMethod } from '../../utils/decorators/http-method.decorator';
-import { params } from '../../utils/decorators/parameters.decorator';
-import { RouterBinding } from '../../utils/types/newable-function-with-properties';
-import { AppError } from '../../model/error';
+import { controller } from '../utils/decorators/controller.decorator';
+import { ToursService, Units } from '../services/tours.service';
+import { RouterBinding } from '../utils/types/newable-function-with-properties';
+import { httpMethod } from '../utils/decorators/http-method.decorator';
+import { params } from '../utils/decorators/parameters.decorator';
+import { ITour } from '../model/tour';
+import { TourRatingAggregate } from '../model/tour-rating-aggregate';
+import { AppError } from '../model/error';
+import { authorize } from '../utils/decorators/authorize.decorator';
+import { UserRoles } from '../model/user';
+import { TourMonthlyPlanAggregate } from '../model/tour-monthly-plan-aggregate';
 
 @controller('/api/v1/tours')
 export class ToursController {

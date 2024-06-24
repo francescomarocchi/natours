@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { inject, injectable } from 'inversify';
 import { Document } from 'mongoose';
-import { Observable, combineLatest, from, map, of, switchMap } from 'rxjs';
+import { Observable, combineLatest, from, map, of, switchMap, tap } from 'rxjs';
 import { AppError } from '../model/error';
 import { IUser, User, UserRoles } from '../model/user';
 import { sendForgotPasswordEmail } from '../utils/operators/send-forgot-password-email';
@@ -189,7 +189,7 @@ export class UserService extends Rudi<IUser> {
   }
 
   private createToken(id: string, role: UserRoles): string {
-    return jwt.sign({ id, role }, process.env.JWT_SECRET as jwt.Secret, {
+    return jwt.sign({ id, role, iat: new Date().getTime() }, process.env.JWT_SECRET as jwt.Secret, {
       expiresIn: this.jwtCookieExpiresIn
     });
   }

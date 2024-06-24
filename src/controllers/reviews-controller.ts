@@ -1,12 +1,12 @@
 import { inject } from 'inversify';
 import { Observable, tap } from 'rxjs';
-import { authorize } from '../../utils/decorators/authorize.decorator';
-import { controller } from '../../utils/decorators/controller.decorator';
-import { httpMethod } from '../../utils/decorators/http-method.decorator';
-import { params } from '../../utils/decorators/parameters.decorator';
-import { ReviewsService } from '../../services/reviews.service';
-import { IReview } from '../../model/review';
-import { User, UserRoles } from '../../model/user';
+import { controller } from '../utils/decorators/controller.decorator';
+import { ReviewsService } from '../services/reviews.service';
+import { authorize } from '../utils/decorators/authorize.decorator';
+import { UserRoles } from '../model/user';
+import { httpMethod } from '../utils/decorators/http-method.decorator';
+import { params } from '../utils/decorators/parameters.decorator';
+import { IReview } from '../model/review';
 
 @controller('/api/v1/reviews', { mergeParams: true })
 export class ReviewsController {

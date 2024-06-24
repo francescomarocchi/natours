@@ -15,13 +15,13 @@ export class Rudi<T> {
     return from(this.model.findById(id).exec());
   }
 
-  public create$(review: T): Observable<T> {
-    return from(this.model.create(review));
+  public create$(data: T): Observable<T> {
+    return from(this.model.create(data));
   }
 
-  public update$(id: string, review: WithQueryParams<T>): Observable<T | null> {
+  public update$(id: string, data: Partial<WithQueryParams<T>>): Observable<T | null> {
     return from(
-      this.model.findByIdAndUpdate(id, review, {
+      this.model.findByIdAndUpdate(id, data, {
         new: true,
         runValidators: true,
       }),

@@ -27,8 +27,8 @@ export const createAuthorizeHandler = (roles?: UserRoles[]): Handler => {
     }
 
     // 2. Verify token
-    try {
-      jwt.verify(token, process.env.JWT_SECRET ?? '');
+    try { 
+      jwt.verify(token, process.env.JWT_SECRET ?? '');  
     } catch (error) {
       const errorName = (error as Error).name;
       if (errorName === 'JsonWebTokenError') {

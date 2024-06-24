@@ -97,6 +97,7 @@ userSchema.pre('save', async function (next) {
 // if user has changed its password after token has been generated
 userSchema.methods.changedPasswordAfter = function (jwtTimestamp: Date) {
   if (this.passwordChangedAt) {
+    console.log(this.passwordChangedAt, jwtTimestamp)
     return this.passwordChangedAt > jwtTimestamp;
   }
   return false;

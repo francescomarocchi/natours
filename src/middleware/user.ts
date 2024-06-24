@@ -12,7 +12,6 @@ export const userRetriever = () => async (request: Request, response: Response, 
   const decodedToken = jwt.verify(token, process.env.JWT_SECRET as jwt.Secret) as JwtPayload;
   const currentUser = await User.findById(decodedToken.id);
 
-
   if (!currentUser) return next();
   if (currentUser.changedPasswordAfter(new Date(decodedToken.iat!))) return next();
 

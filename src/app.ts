@@ -11,15 +11,15 @@ import { notFoundCatcher } from './middleware/not-found-catcher';
 import { expressRateLimit } from './middleware/rate-limiter';
 import { CONNECTION_STRING } from './utils/constants';
 import { ExpressMetadataApplication } from './utils/express-metadata-application';
+import { userRetriever } from './middleware/user';
 
 // TODO: make this become a module!
-import './routes/controllers/service-controller';
-import './routes/controllers/reviews-controller';
-import './routes/controllers/tours-controller';
-import './routes/controllers/users-controller';
-import './routes/controllers/auth-controller';
-import './routes/controllers/views-controller';
-import { userRetriever } from './middleware/user';
+import './controllers/service-controller';
+import './controllers/reviews-controller';
+import './controllers/tours-controller';
+import './controllers/users-controller';
+import './controllers/auth-controller';
+import './controllers/views-controller';
 
 ExpressMetadataApplication.create(container)
   .setViewEngine('pug', 'src/views')
@@ -41,6 +41,7 @@ ExpressMetadataApplication.create(container)
   .addDevMiddleware(morgan('dev'))
   .addApiMiddleware(expressRateLimit())
   .addMiddleware(express.json({ limit: '10kb' }))
+  .addMiddleware(express.urlencoded({ extended: true, limit: '10kb' }))
   .addMiddleware(mongoSanitize())
   // find and add a good xss sanitizer!
   .addMiddleware(
