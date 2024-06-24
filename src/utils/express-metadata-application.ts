@@ -19,9 +19,6 @@ export class ExpressMetadataApplication {
   private readonly app: Express = this.container.get<Express>('app');
   private readonly isDevelopment: boolean =
     this.container.get<boolean>(IS_DEVELOPMENT);
-  private readonly jwtCookieExpiresIn = this.container.get<number>(
-    JWT_COOKIE_EXPIRES_IN,
-  );
   private readonly routers = new Map<string, Router>([]);
 
   // We can get instance of user service here to be used for checks in TODOS in this file
@@ -115,7 +112,6 @@ export class ExpressMetadataApplication {
           const routeHandler = createRouteHandler({
             method: method.bind(controller),
             parametersMetadata: parameters,
-            cookieExpiration: this.jwtCookieExpiresIn,
             isDevelopment: this.isDevelopment,
             statusCode: methodMetadata.statusCode ??
               getStatusCodeFromHttpVerb(methodMetadata.method),

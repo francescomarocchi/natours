@@ -12,7 +12,7 @@ import { ForCookie } from '../../utils/types/for-cookie';
 
 @controller('/')
 export class AuthController {
-  constructor(@inject(UserService) private readonly userService: UserService) {}
+  constructor(@inject(UserService) private readonly userService: UserService) { }
 
   @httpMethod('post', '/signup')
   public signup(@params('body') user: IUser): Observable<ForCookie<IUser>> {
@@ -22,7 +22,6 @@ export class AuthController {
   @httpMethod('post', '/login', 200)
   public login(
     @params('body') credentials: { email: string; password: string },
-    @params('response') response: Response,
   ): Observable<ForCookie<string> | AppError> {
     const { email, password } = credentials;
     if (!email || !password) {
@@ -32,9 +31,13 @@ export class AuthController {
       );
     }
 
-    // TODO: this crap should be refactored (statusCode set in @httpMethod?)
-    // response.locals.statusCode = 200;
     return this.userService.login$(email, password);
+  }
+
+  @authorize()
+  @httpMethod('get', '/logout')
+  public logout(): Observable<ForCookie<string>> {
+    return this.userService.logout$();
   }
 
   @httpMethod('post', '/forgot-password')

@@ -3,7 +3,6 @@ import { ParameterMetadata } from "./interfaces/parameter-metadata";
 import { isObservable, take } from "rxjs";
 
 const setLocals = (response: Response, params: CreateRouteHandlerParams, data: unknown): void => {
-  response.locals.cookieExpiration = params.cookieExpiration;
   response.locals.isDevelopment = params.isDevelopment;
   response.locals.handlerResponse = data;
   response.locals.statusCode = params.statusCode;
@@ -12,7 +11,6 @@ const setLocals = (response: Response, params: CreateRouteHandlerParams, data: u
 export interface CreateRouteHandlerParams {
   method: (...args: unknown[]) => unknown;
   parametersMetadata: ParameterMetadata[];
-  cookieExpiration: number;
   isDevelopment: boolean;
   statusCode: number;
 }

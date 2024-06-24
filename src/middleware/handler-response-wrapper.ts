@@ -18,8 +18,7 @@ export function handlerResponseWrapper(): Handler {
       return;
     }
 
-    const { handlerResponse, cookieExpiration, isDevelopment, statusCode } =
-      response.locals;
+    const { handlerResponse, isDevelopment, statusCode } = response.locals;
 
     if (handlerResponse instanceof Error) {
       throw handlerResponse;
@@ -34,9 +33,18 @@ export function handlerResponseWrapper(): Handler {
 
     if (handlerResponse instanceof ForCookie) {
       const cookieOptions: CookieOptions = {
-        expires: new Date(Date.now() + cookieExpiration),
+        expires: new Date(Date.now() + handlerResponse.expiration),
         httpOnly: true,
       };
+
+      // TODO: better handling for delete cookie!
+      if (handlerResponse.payload === '') {
+        response.cookie('jwt', '', cookieOptions);
+        response
+          .status(statusCode)
+          .json(createAppResponse(handlerResponse.payload, 'success'));
+        return;
+      }
 
       cookieOptions.secure = !isDevelopment;
 

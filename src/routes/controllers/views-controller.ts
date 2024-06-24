@@ -37,8 +37,12 @@ export class ViewsController {
   public tour(@params('params', 'slug') slug: string): Observable<PugTemplate> {
     const tour$ = this.toursService.getBySlug$(slug);
     return tour$.pipe(
-      map((tour) => ({ title: `${tour?.name} tour`, tour })),
-      tap(console.log),
+      map((tour) => {
+        if (!tour) {
+          throw new Error(`Cannot find tour named ${slug}`)
+        }
+        return { title: `${tour?.name} tour`, tour }
+      }),
       toPugTemplate('tour'),
     );
   }

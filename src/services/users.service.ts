@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Document } from 'mongoose';
 import { Observable, combineLatest, from, map, of, switchMap } from 'rxjs';
 import { AppError } from '../model/error';
@@ -10,11 +10,12 @@ import { sendForgotPasswordEmail } from '../utils/operators/send-forgot-password
 import { EMPTY } from '../utils/types/empty';
 import { ForCookie } from '../utils/types/for-cookie';
 import { Rudi } from './rudi';
-import { WithQueryParams } from '../utils/types/with-query-params';
+import { JWT_COOKIE_EXPIRES_IN } from '../utils/constants';
 
 @injectable()
 export class UserService extends Rudi<IUser> {
-  constructor() {
+
+  constructor(@inject(JWT_COOKIE_EXPIRES_IN) private readonly jwtCookieExpiresIn: number) {
     super(User);
   }
 
@@ -35,7 +36,7 @@ export class UserService extends Rudi<IUser> {
         const serializedNewUser = JSON.stringify(newUser);
         const deserializedNewUser = JSON.parse(serializedNewUser);
         deserializedNewUser.password = undefined;
-        return new ForCookie({ ...deserializedNewUser, token }, token);
+        return new ForCookie({ ...deserializedNewUser, token }, token, this.jwtCookieExpiresIn);
       }),
     );
   }
@@ -64,9 +65,13 @@ export class UserService extends Rudi<IUser> {
           return new AppError('Incorrect email or password', 401);
         }
         const token = this.createToken(id, role as UserRoles);
-        return new ForCookie(token, token);
+        return new ForCookie(token, token, this.jwtCookieExpiresIn);
       }),
     );
+  }
+
+  public logout$(): Observable<ForCookie<string>> {
+    return of(new ForCookie('', '', 10 * 1_000));
   }
 
   public updateAuthenticatedUser$(
@@ -143,7 +148,7 @@ export class UserService extends Rudi<IUser> {
           return user;
         }
         const token = this.createToken(user.id, user.role);
-        return new ForCookie(token, token);
+        return new ForCookie(token, token, this.jwtCookieExpiresIn);
       }),
     );
   }
@@ -178,14 +183,14 @@ export class UserService extends Rudi<IUser> {
           return user;
         }
         const token = this.createToken(user.id, user.role);
-        return new ForCookie(token, token);
+        return new ForCookie(token, token, this.jwtCookieExpiresIn);
       }),
     );
   }
 
   private createToken(id: string, role: UserRoles): string {
     return jwt.sign({ id, role }, process.env.JWT_SECRET as jwt.Secret, {
-      expiresIn: process.env.JWT_EXPIRES_IN,
+      expiresIn: this.jwtCookieExpiresIn
     });
   }
 }
