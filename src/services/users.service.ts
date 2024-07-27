@@ -78,11 +78,12 @@ export class UserService extends Rudi<IUser> {
     userId: string,
     name: string,
     email: string,
+    photo?: string,
   ): Observable<AppError | IUser> {
     return from(
       User.findByIdAndUpdate<IUser>(
         userId,
-        { name, email },
+        { name, email, photo },
         { new: true, runValidators: true },
       ),
     ).pipe(map((user) => (user ? user : new AppError('User not found', 400))));

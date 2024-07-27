@@ -47,6 +47,9 @@ export const createRouteHandler = (params: CreateRouteHandlerParams): Handler =>
         case 'user':
           args[parameter.index] = response.locals.user;
           break;
+        case 'files':
+          args[parameter.index] = (request as any).files
+          break;
       }
     });
 

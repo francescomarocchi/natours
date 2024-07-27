@@ -1,5 +1,5 @@
 import { inject } from 'inversify';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, catchError, from, Observable, of, switchMap } from 'rxjs';
 import { controller } from '../utils/decorators/controller.decorator';
 import { UserService } from '../services/users.service';
 import { authorize } from '../utils/decorators/authorize.decorator';
@@ -8,6 +8,8 @@ import { httpMethod } from '../utils/decorators/http-method.decorator';
 import { params } from '../utils/decorators/parameters.decorator';
 import { AppError } from '../model/error';
 import { EMPTY } from '../utils/types/empty';
+import { FileArray, UploadedFile } from 'express-fileupload';
+import path from 'path';
 
 @controller('/api/v1/users')
 export class UsersController {
@@ -42,8 +44,8 @@ export class UsersController {
 
   @authorize([UserRoles.Admin])
   @httpMethod('delete', '/:id')
-  public deleteTour(
-    @params('params', 'id') id: string,
+  public deleteUser(
+    @params('params', 'id') id: string
   ): Observable<IUser | null> {
     return this.userService.delete$(id);
   }
@@ -61,7 +63,24 @@ export class UsersController {
   public updateAuthenticatedUser(
     @params('user') userId: string,
     @params('body') body: { name: string; email: string },
+    @params('files') files: FileArray
   ): Observable<AppError | IUser> {
+    const photo = files.photo as UploadedFile;
+
+    if (photo) {
+      const main = path.dirname(require.main?.filename ?? '');
+      const uploadPath = main + '/../public/img/users/uploaded/' + photo.name;
+      
+      return from(photo.mv(uploadPath)).pipe(switchMap(() => {
+        return this.userService.updateAuthenticatedUser$(
+          userId,
+          body.name,
+          body.email,
+          `uploaded/${photo.name}`
+        )
+      }));
+    }
+
     return this.userService.updateAuthenticatedUser$(
       userId,
       body.name,

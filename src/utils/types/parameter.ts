@@ -9,4 +9,4 @@ export type PARAMETER =
   | 'next'
   | 'principal'
   | 'user'
-  | 'role';
+  | 'files';

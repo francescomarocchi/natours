@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import hpp from 'hpp';
 import mongoose from 'mongoose';
 import mongoSanitize from 'express-mongo-sanitize';
+import fileUpload from 'express-fileupload';
 import morgan from 'morgan';
 import container from './container';
 import { errorCatcher } from './middleware/error-catcher';
@@ -40,6 +41,7 @@ ExpressMetadataApplication.create(container)
   )
   .addDevMiddleware(morgan('dev'))
   .addApiMiddleware(expressRateLimit())
+  .addMiddleware(fileUpload())
   .addMiddleware(express.json({ limit: '10kb' }))
   .addMiddleware(express.urlencoded({ extended: true, limit: '10kb' }))
   .addMiddleware(mongoSanitize())
