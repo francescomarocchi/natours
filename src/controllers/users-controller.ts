@@ -1,5 +1,5 @@
 import { inject } from 'inversify';
-import { BehaviorSubject, catchError, from, Observable, of, switchMap } from 'rxjs';
+import { from, Observable, switchMap } from 'rxjs';
 import { controller } from '../utils/decorators/controller.decorator';
 import { UserService } from '../services/users.service';
 import { authorize } from '../utils/decorators/authorize.decorator';
@@ -10,6 +10,7 @@ import { AppError } from '../model/error';
 import { EMPTY } from '../utils/types/empty';
 import { FileArray, UploadedFile } from 'express-fileupload';
 import path from 'path';
+import sharp from 'sharp';
 
 @controller('/api/v1/users')
 export class UsersController {
@@ -70,15 +71,17 @@ export class UsersController {
     if (photo) {
       const main = path.dirname(require.main?.filename ?? '');
       const uploadPath = main + '/../public/img/users/uploaded/' + photo.name;
-      
-      return from(photo.mv(uploadPath)).pipe(switchMap(() => {
-        return this.userService.updateAuthenticatedUser$(
-          userId,
-          body.name,
-          body.email,
-          `uploaded/${photo.name}`
-        )
-      }));
+
+      // Jonas used multer, we use express-fileupload
+      // It is possible to manipulate a lot the image using sharp
+      const sharpenedPhoto$ = from(sharp(photo.data).resize(500, 500).toFile(uploadPath));
+
+      return sharpenedPhoto$.pipe(switchMap(() => this.userService.updateAuthenticatedUser$(
+        userId,
+        body.name,
+        body.email,
+        `uploaded/${photo.name}`
+      )))
     }
 
     return this.userService.updateAuthenticatedUser$(

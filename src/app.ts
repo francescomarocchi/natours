@@ -34,6 +34,7 @@ ExpressMetadataApplication.create(container)
             'tile.openstreetmap.org',
             'tile.thunderforest.com',
             'localhost:8080',
+            'data:'
           ],
         },
       },
