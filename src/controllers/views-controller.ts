@@ -1,4 +1,4 @@
-import { EMPTY, Observable, map, of } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 import { PugTemplate } from '../model/pug-template';
 import { controller } from '../utils/decorators/controller.decorator';
 import { httpMethod } from '../utils/decorators/http-method.decorator';
@@ -7,7 +7,6 @@ import { ToursService } from '../services/tours.service';
 import { ITour } from '../model/tour';
 import { authorize } from '../utils/decorators/authorize.decorator';
 import { UserService } from '../services/users.service';
-import { IfUnknown } from 'mongoose';
 
 const toPugTemplate =
   (template: string) =>

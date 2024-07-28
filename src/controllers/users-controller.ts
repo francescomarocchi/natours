@@ -66,6 +66,7 @@ export class UsersController {
     @params('body') body: { name: string; email: string },
     @params('files') files: FileArray
   ): Observable<AppError | IUser> {
+    console.error(body)
     const photo = files.photo as UploadedFile;
 
     if (photo) {
