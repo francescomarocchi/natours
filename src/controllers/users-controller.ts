@@ -11,6 +11,7 @@ import { EMPTY } from '../utils/types/empty';
 import { FileArray, UploadedFile } from 'express-fileupload';
 import path from 'path';
 import sharp from 'sharp';
+import { getUploadPath } from '../utils/get-upload-path';
 
 @controller('/api/v1/users')
 export class UsersController {
@@ -66,12 +67,10 @@ export class UsersController {
     @params('body') body: { name: string; email: string },
     @params('files') files: FileArray
   ): Observable<AppError | IUser> {
-    console.error(body)
     const photo = files.photo as UploadedFile;
 
     if (photo) {
-      const main = path.dirname(require.main?.filename ?? '');
-      const uploadPath = main + '/../public/img/users/uploaded/' + photo.name;
+      const uploadPath = getUploadPath('/../public/img/users/uploaded/', photo.name);
 
       // Jonas used multer, we use express-fileupload
       // It is possible to manipulate a lot the image using sharp
